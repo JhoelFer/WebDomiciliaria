@@ -1,0 +1,46 @@
+PROBLEMA CRÍTICO: Vercel Serverless Functions devuelve 405 Method Not Allowed para POST requests a /api/appointments
+
+CONTEXTO TÉCNICO:
+- Stack: React + TypeScript + Vite (frontend) + Express.js + TypeScript (backend en Replit)
+- Deployment: Vercel (frontend) + Replit (backend)
+- Arquitectura: Frontend hace POST a /api/appointments → Vercel Function debería proxy a backend externo
+
+ERROR ESPECÍFICO:
+Frontend: fetch("/api/appointments", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) })
+Response: 405 Method Not Allowed (de Vercel, NO del backend)
+
+EVIDENCIAS CONFIRMADAS:
+1. ✅ Backend en Replit FUNCIONA: POST /api/appointments recibe datos y guarda en DB (hay 12 registros en DB)
+2. ❌ Vercel devuelve 405 antes de llegar al proxy
+3. ❌ Network: "Failed to load resource: the server responded with a status of 405 ()"
+4. ❌ Posible issue: Archivo API podría ser .ts en lugar de .js
+
+ESCENARIOS POSIBLES Y SOLUCIONES REQUERIDAS:
+
+ESCENARIO A: Si existe /api/appointments.ts en Vercel
+PROBLEMA: Vercel no ejecuta .ts files en Serverless Functions sin configuración
+SOLUCIÓN NECESARIA: 
+  1. Convertir appointments.ts → appointments.js
+  2. O configurar Vercel para ejecutar TypeScript en Functions
+
+CONTENIDO REQUERIDO para /api/appointments.js:
+```javascript
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
+    return res.status(405).json({ error: "Método no permitido" });
+  }
+
+  try {
+    const backendURL = process.env.BACKEND_URL || "https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev";
+    const response = await fetch(`${backendURL}/api/appointments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    return res.status(response.status).json(data);
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno en la API" });
+  }
+}
