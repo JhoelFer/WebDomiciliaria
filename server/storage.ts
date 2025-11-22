@@ -25,7 +25,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAppointments(): Promise<Appointment[]> {
-    return await db.select().from(appointments).orderBy(appointments.createdAt);
+    return await db
+      .select()
+      .from(appointments)
+      .where(isNull(appointments.deletedAt))
+      .orderBy(appointments.createdAt);
   }
 
   async getAppointmentsByDateRange(startDate: string): Promise<Appointment[]> {
