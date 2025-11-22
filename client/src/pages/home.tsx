@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { 
   Monitor, 
   Smartphone, 
@@ -27,6 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAppointmentForm } from "@/hooks/useAppointmentForm";
+import { ConfirmAppointmentButton } from "@/components/ConfirmAppointmentButton";
 import heroImage from "@assets/generated_images/modern_minimalist_workspace_with_soft_celeste_lighting.png";
 
 export default function Home() {
@@ -448,113 +449,17 @@ function WhyChooseMe() {
 }
 
 function Contact() {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    date: "",
-    time: "",
-    message: ""
-  });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  
-  const { data: bookedSlots = [] } = useQuery({
-    queryKey: ["bookedSlots", formData.date],
-    queryFn: async () => {
-      if (!formData.date) return [];
-      const res = await fetch(`https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments/booked-slots?date=${formData.date}`);
-      return res.json();
-    },
-    enabled: !!formData.date,
-  });
-
-  const validateArgentinePhone = (phone: string) => {
-    const cleanPhone = phone.replace(/\D/g, "");
-    if (cleanPhone.startsWith("54")) {
-      return cleanPhone.length === 13;
-    } else {
-      return cleanPhone.length === 10 || cleanPhone.length === 11;
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-    setIsSubmitting(true);
-
-    // Validaciones en el frontend
-    if (!formData.name.trim()) {
-      setErrorMessage("Por favor, ingresa tu nombre.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!validateArgentinePhone(formData.phone)) {
-      setErrorMessage("Número de teléfono inválido. Usa formatos como: +54 9 381 446 8379 o 3814468379");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!formData.date) {
-      setErrorMessage("Por favor, selecciona una fecha.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!formData.time) {
-      setErrorMessage("Por favor, selecciona una hora.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const response = await fetch("https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const text = `Hola Jhoel, soy ${formData.name}. Me gustaría agendar una visita para el día ${formData.date} a las ${formData.time}. 
-    
-Mi teléfono es: ${formData.phone}
-Detalles: ${formData.message || "Sin detalles adicionales"}`;
-
-        const encodedText = encodeURIComponent(text);
-        window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
-        
-        setSuccessMessage("¡Solicitud registrada! Se abrirá WhatsApp para confirmar los detalles.");
-        setFormData({ name: "", phone: "", date: "", time: "", message: "" });
-        setTimeout(() => setSuccessMessage(""), 5000);
-      } else {
-        try {
-          const errorData = await response.json();
-          setErrorMessage(errorData.error || "Error al guardar la solicitud. Por favor intenta de nuevo.");
-        } catch {
-          setErrorMessage(`Error ${response.status}: Intenta de nuevo o verifica tu conexión.`);
-        }
-      }
-    } catch (error: any) {
-      console.error("Error details:", error);
-      if (error.message === "Failed to fetch") {
-        setErrorMessage("No se puede conectar al servidor. Recarga la página (F5) e intenta de nuevo.");
-      } else {
-        setErrorMessage("Error de conexión. Verifica tu internet e intenta de nuevo.");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const availableHours = [
-    "09:00", "10:00", "11:00", "12:00",
-    "14:00", "15:00", "16:00", "17:00", "18:00"
-  ];
-
-  const isSlotBooked = (time: string) => bookedSlots.includes(time);
+  const {
+    formData,
+    setFormData,
+    handleSubmit,
+    errorMessage,
+    successMessage,
+    isSubmitting,
+    bookedSlots,
+    availableHours,
+    isSlotBooked
+  } = useAppointmentForm();
 
   return (
     <section id="contact" className="py-20">
@@ -712,14 +617,11 @@ Detalles: ${formData.message || "Sin detalles adicionales"}`;
                   />
                 </div>
                 
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting || !formData.name || !formData.phone || !formData.date || !formData.time}
+                <ConfirmAppointmentButton 
+                  isSubmitting={isSubmitting}
+                  disabled={!formData.name || !formData.phone || !formData.date || !formData.time}
                   className="w-full rounded-lg h-12 text-sm md:text-base font-medium shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:bg-green-600 bg-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  {isSubmitting ? "Guardando..." : "Confirmar Solicitud"}
-                </Button>
+                />
                 <p className="text-xs text-center text-muted-foreground">
                   Se abrirá WhatsApp para confirmar tu cita.
                 </p>
