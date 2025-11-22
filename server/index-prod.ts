@@ -18,7 +18,11 @@ export async function serveStatic(app: Express, server: Server) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // but skip API routes - let them be handled by the API routes middleware
+  app.use("*", (req, res, next) => {
+    if (req.originalUrl.startsWith("/api/")) {
+      return next();
+    }
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
