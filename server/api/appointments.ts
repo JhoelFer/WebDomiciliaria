@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const backendURL = process.env.BACKEND_URL || "https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/";
+    const backendURL = "https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev";
 
     const response = await fetch(`${backendURL}/api/appointments`, {
       method: "POST",
