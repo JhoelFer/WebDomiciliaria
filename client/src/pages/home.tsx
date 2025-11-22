@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Monitor, 
   Smartphone, 
@@ -334,18 +335,55 @@ function Contact() {
     time: "",
     message: ""
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: bookedSlots = [] } = useQuery({
+    queryKey: ["bookedSlots", formData.date],
+    queryFn: async () => {
+      if (!formData.date) return [];
+      const res = await fetch(`/api/appointments/booked-slots?date=${formData.date}`);
+      return res.json();
+    },
+    enabled: !!formData.date,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const text = `Hola Jhoel, soy ${formData.name}. Me gustaría agendar una visita para el día ${formData.date} a las ${formData.time}. 
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const text = `Hola Jhoel, soy ${formData.name}. Me gustaría agendar una visita para el día ${formData.date} a las ${formData.time}. 
     
 Mi teléfono es: ${formData.phone}
 Detalles: ${formData.message}`;
 
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
+        const encodedText = encodeURIComponent(text);
+        window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
+        
+        setFormData({ name: "", phone: "", date: "", time: "", message: "" });
+      } else {
+        alert("Error al guardar la solicitud. Intenta de nuevo.");
+      }
+    } catch (error) {
+      alert("Error al guardar la solicitud. Intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const availableHours = [
+    "09:00", "10:00", "11:00", "12:00",
+    "14:00", "15:00", "16:00", "17:00", "18:00"
+  ];
+
+  const isSlotBooked = (time: string) => bookedSlots.includes(time);
 
   return (
     <section id="contact" className="py-20">
@@ -448,29 +486,32 @@ Detalles: ${formData.message}`;
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="time">Hora Preferida</Label>
-                    <select
-                      id="time"
-                      className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      required
-                      value={formData.time}
-                      onChange={(e) => setFormData({...formData, time: e.target.value})}
-                    >
-                      <option value="">Selecciona una hora</option>
-                      <optgroup label="Mañana">
-                        <option value="09:00">09:00 hs</option>
-                        <option value="10:00">10:00 hs</option>
-                        <option value="11:00">11:00 hs</option>
-                        <option value="12:00">12:00 hs</option>
-                      </optgroup>
-                      <optgroup label="Tarde">
-                        <option value="14:00">14:00 hs</option>
-                        <option value="15:00">15:00 hs</option>
-                        <option value="16:00">16:00 hs</option>
-                        <option value="17:00">17:00 hs</option>
-                        <option value="18:00">18:00 hs</option>
-                      </optgroup>
-                    </select>
-                    <p className="text-[10px] text-muted-foreground">Sujeto a confirmación por WhatsApp</p>
+                    {!formData.date ? (
+                      <div className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-muted-foreground items-center">
+                        Selecciona una fecha primero
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {availableHours.map((hour) => (
+                          <button
+                            key={hour}
+                            type="button"
+                            onClick={() => setFormData({...formData, time: hour})}
+                            disabled={isSlotBooked(hour)}
+                            className={`py-2 px-2 rounded-md text-xs font-medium transition-all ${
+                              isSlotBooked(hour)
+                                ? "bg-slate-100 text-slate-400 cursor-not-allowed line-through"
+                                : formData.time === hour
+                                  ? "bg-primary text-white"
+                                  : "border border-slate-200 bg-white hover:border-primary"
+                            }`}
+                          >
+                            {hour}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">Gris: horario ocupado | Confirmación por WhatsApp</p>
                   </div>
                 </div>
                 
@@ -485,9 +526,13 @@ Detalles: ${formData.message}`;
                   />
                 </div>
                 
-                <Button type="submit" className="w-full rounded-lg h-12 text-base font-medium shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:bg-green-600 bg-green-500 transition-all">
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full rounded-lg h-12 text-base font-medium shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:bg-green-600 bg-green-500 transition-all"
+                >
                   <MessageCircle className="mr-2 h-5 w-5" />
-                  Confirmar Solicitud por WhatsApp
+                  {isSubmitting ? "Guardando..." : "Confirmar Solicitud por WhatsApp"}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground mt-4">
                   Al hacer clic, se abrirá WhatsApp para enviar los detalles de tu cita.

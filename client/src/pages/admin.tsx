@@ -1,0 +1,251 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone } from "lucide-react";
+import type { Appointment } from "@shared/schema";
+
+export default function Admin() {
+  const [password, setPassword] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === "jhoel2025") {
+      setIsAuthenticated(true);
+      setPassword("");
+    } else {
+      alert("Contraseña incorrecta");
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-heading">Acceso Admin</CardTitle>
+            <CardDescription>Ingresa tu contraseña para ver las citas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <Button type="submit" className="w-full">
+                Ingresar
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <nav className="bg-white border-b border-border sticky top-0 z-40">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <h1 className="font-heading font-bold text-xl text-slate-900">Dashboard Admin</h1>
+          <Button
+            variant="outline"
+            onClick={() => setIsAuthenticated(false)}
+            className="gap-2"
+          >
+            <LogOut size={18} />
+            Salir
+          </Button>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-6 py-8">
+        <AppointmentsList />
+      </div>
+    </div>
+  );
+}
+
+function AppointmentsList() {
+  const queryClient = useQueryClient();
+  const { data: appointments = [], isLoading } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: async () => {
+      const res = await fetch("/api/appointments");
+      return res.json() as Promise<Appointment[]>;
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+  });
+
+  if (isLoading) {
+    return <div className="text-center py-8">Cargando...</div>;
+  }
+
+  const pending = appointments.filter((a) => a.status === "pending");
+  const confirmed = appointments.filter((a) => a.status === "confirmed");
+  const cancelled = appointments.filter((a) => a.status === "cancelled");
+
+  return (
+    <div className="space-y-8">
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Solicitudes Pendientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-primary">{pending.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Citas Confirmadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-green-600">{confirmed.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total de Solicitudes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-slate-900">{appointments.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Section title="Solicitudes Pendientes" appointments={pending} updateMutation={updateMutation} />
+        <Section title="Citas Confirmadas" appointments={confirmed} updateMutation={updateMutation} />
+        <Section title="Citas Canceladas" appointments={cancelled} updateMutation={updateMutation} />
+      </div>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  appointments,
+  updateMutation,
+}: {
+  title: string;
+  appointments: Appointment[];
+  updateMutation: any;
+}) {
+  if (appointments.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {appointments.map((apt) => (
+            <div
+              key={apt.id}
+              className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-bold text-slate-900">{apt.name}</h4>
+                    <Badge
+                      variant={
+                        apt.status === "confirmed"
+                          ? "default"
+                          : apt.status === "cancelled"
+                            ? "destructive"
+                            : "secondary"
+                      }
+                    >
+                      {apt.status === "pending"
+                        ? "Pendiente"
+                        : apt.status === "confirmed"
+                          ? "Confirmada"
+                          : "Cancelada"}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Phone size={14} />
+                      {apt.phone}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} />
+                      {apt.date} a las {apt.time}
+                    </div>
+                    {apt.message && <p className="text-xs mt-2 italic">{apt.message}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-border">
+                {apt.status !== "confirmed" && (
+                  <Button
+                    size="sm"
+                    onClick={() => updateMutation.mutate({ id: apt.id, status: "confirmed" })}
+                    disabled={updateMutation.isPending}
+                    className="gap-2"
+                  >
+                    <CheckCircle2 size={16} />
+                    Confirmar
+                  </Button>
+                )}
+                {apt.status !== "cancelled" && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => updateMutation.mutate({ id: apt.id, status: "cancelled" })}
+                    disabled={updateMutation.isPending}
+                    className="gap-2"
+                  >
+                    <X size={16} />
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

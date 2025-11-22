@@ -32,6 +32,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/appointments/booked-slots", async (req, res) => {
+    try {
+      const date = req.query.date as string;
+      if (!date) {
+        return res.status(400).json({ error: "Date parameter required" });
+      }
+      const confirmedAppointments = await storage.getConfirmedAppointments();
+      const bookedSlots = confirmedAppointments
+        .filter(a => a.date === date)
+        .map(a => a.time);
+      res.json(bookedSlots);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch booked slots" });
+    }
+  });
+
   app.patch("/api/appointments/:id", async (req, res) => {
     try {
       const { id } = req.params;
