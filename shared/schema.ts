@@ -12,6 +12,7 @@ export const appointments = pgTable("appointments", {
   message: text("message"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({

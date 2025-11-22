@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home } from "lucide-react";
+import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home, Trash2 } from "lucide-react";
 import type { Appointment } from "@shared/schema";
 
 export default function Admin() {
@@ -118,6 +118,18 @@ function AppointmentsList() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "DELETE",
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+  });
+
   if (isLoading) {
     return <div className="text-center py-8">Cargando...</div>;
   }
@@ -162,9 +174,9 @@ function AppointmentsList() {
       </div>
 
       <div className="space-y-6">
-        <Section title="Solicitudes Pendientes" appointments={pending} updateMutation={updateMutation} />
-        <Section title="Citas Confirmadas" appointments={confirmed} updateMutation={updateMutation} />
-        <Section title="Citas Canceladas" appointments={cancelled} updateMutation={updateMutation} />
+        <Section title="Solicitudes Pendientes" appointments={pending} updateMutation={updateMutation} deleteMutation={deleteMutation} />
+        <Section title="Citas Confirmadas" appointments={confirmed} updateMutation={updateMutation} deleteMutation={deleteMutation} />
+        <Section title="Citas Canceladas" appointments={cancelled} updateMutation={updateMutation} deleteMutation={deleteMutation} />
       </div>
     </div>
   );
@@ -174,10 +186,12 @@ function Section({
   title,
   appointments,
   updateMutation,
+  deleteMutation,
 }: {
   title: string;
   appointments: Appointment[];
   updateMutation: any;
+  deleteMutation: any;
 }) {
   if (appointments.length === 0) {
     return null;
@@ -235,7 +249,7 @@ function Section({
                   <Button
                     size="sm"
                     onClick={() => updateMutation.mutate({ id: apt.id, status: "confirmed" })}
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || deleteMutation.isPending}
                     className="gap-2 text-xs sm:text-sm"
                   >
                     <CheckCircle2 size={16} />
@@ -245,15 +259,29 @@ function Section({
                 {apt.status !== "cancelled" && (
                   <Button
                     size="sm"
-                    variant="destructive"
+                    variant="outline"
                     onClick={() => updateMutation.mutate({ id: apt.id, status: "cancelled" })}
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || deleteMutation.isPending}
                     className="gap-2 text-xs sm:text-sm"
                   >
                     <X size={16} />
                     Cancelar
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (confirm("¿Estás seguro de que deseas eliminar esta solicitud?")) {
+                      deleteMutation.mutate(apt.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending || updateMutation.isPending}
+                  className="gap-2 text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                  Eliminar
+                </Button>
               </div>
             </div>
           ))}

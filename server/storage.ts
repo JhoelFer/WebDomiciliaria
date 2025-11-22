@@ -1,7 +1,7 @@
 import { type Appointment, type InsertAppointment, appointments } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, isNull } from "drizzle-orm";
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -12,6 +12,7 @@ export interface IStorage {
   getAppointmentsByDateRange(startDate: string): Promise<Appointment[]>;
   updateAppointmentStatus(id: string, status: string): Promise<Appointment | undefined>;
   getConfirmedAppointments(): Promise<Appointment[]>;
+  deleteAppointment(id: string): Promise<Appointment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -49,8 +50,17 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(appointments)
-      .where(and(eq(appointments.status, "confirmed"), gte(appointments.date, today)))
+      .where(and(eq(appointments.status, "confirmed"), gte(appointments.date, today), isNull(appointments.deletedAt)))
       .orderBy(appointments.date, appointments.time);
+  }
+
+  async deleteAppointment(id: string): Promise<Appointment | undefined> {
+    const [appointment] = await db
+      .update(appointments)
+      .set({ deletedAt: new Date() })
+      .where(eq(appointments.id, id))
+      .returning();
+    return appointment;
   }
 }
 
