@@ -1,6 +1,16 @@
-export default async function handler(req, res) {
+import type { Request, Response } from "express";
+
+export default async function handler(req: Request, res: Response) {
+  // Manejar CORS preflight
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
+    res.setHeader("Allow", ["POST", "OPTIONS"]);
     return res.status(405).json({ error: "Método no permitido" });
   }
 
@@ -16,6 +26,12 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    // Agregar headers CORS a la respuesta
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    
     return res.status(response.status).json(data);
 
   } catch (error) {
