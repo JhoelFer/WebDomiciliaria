@@ -1,38 +1,57 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type Appointment, type InsertAppointment, appointments } from "@shared/schema";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { eq, and, gte } from "drizzle-orm";
 
-// modify the interface with any CRUD methods
-// you might need
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  getAppointments(): Promise<Appointment[]>;
+  getAppointmentsByDateRange(startDate: string): Promise<Appointment[]>;
+  updateAppointmentStatus(id: string, status: string): Promise<Appointment | undefined>;
+  getConfirmedAppointments(): Promise<Appointment[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
+    const [appointment] = await db
+      .insert(appointments)
+      .values(insertAppointment)
+      .returning();
+    return appointment;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getAppointments(): Promise<Appointment[]> {
+    return await db.select().from(appointments).orderBy(appointments.createdAt);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getAppointmentsByDateRange(startDate: string): Promise<Appointment[]> {
+    return await db
+      .select()
+      .from(appointments)
+      .where(gte(appointments.date, startDate))
+      .orderBy(appointments.date, appointments.time);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async updateAppointmentStatus(id: string, status: string): Promise<Appointment | undefined> {
+    const [appointment] = await db
+      .update(appointments)
+      .set({ status })
+      .where(eq(appointments.id, id))
+      .returning();
+    return appointment;
+  }
+
+  async getConfirmedAppointments(): Promise<Appointment[]> {
+    const today = new Date().toISOString().split('T')[0];
+    return await db
+      .select()
+      .from(appointments)
+      .where(and(eq(appointments.status, "confirmed"), gte(appointments.date, today)))
+      .orderBy(appointments.date, appointments.time);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
