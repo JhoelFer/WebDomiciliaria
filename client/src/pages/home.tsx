@@ -240,12 +240,12 @@ function About() {
               <div className="bg-slate-900 text-white p-10 rounded-3xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                 <Code2 className="w-12 h-12 text-primary mb-6" />
-                <h3 className="text-2xl font-heading font-bold mb-4">Hola, soy el creador detrás de tus proyectos</h3>
+                <h3 className="text-2xl font-heading font-bold mb-4">Hola, soy Jhoel Fernando Albornoz</h3>
                 <p className="text-slate-300 leading-relaxed mb-6">
-                  Mi nombre es <span className="text-white font-semibold">Alex</span>. Soy un desarrollador apasionado por el diseño minimalista y la tecnología útil.
+                  Soy Técnico Superior en Desarrollo de Software en formación, apasionado por crear soluciones tecnológicas eficientes y modernas.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
-                  Me especializo en visitar a mis clientes, entender su negocio desde adentro y crear soluciones que realmente funcionen. Creo en el trato humano, directo y sin intermediarios.
+                  Combino mi sólida base técnica en programación (C#, Python, MySQL) con el diseño web para ofrecer sitios que no solo se ven bien, sino que funcionan perfecto. Me caracterizo por mi aprendizaje rápido y compromiso total con cada proyecto.
                 </p>
               </div>
             </div>
@@ -253,18 +253,18 @@ function About() {
           <div className="md:w-1/2 space-y-6">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-slate-900">
               Más que un desarrollador, <br />
-              <span className="text-primary">tu socio digital.</span>
+              <span className="text-primary">tu socio tecnológico.</span>
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              En un mundo lleno de plantillas genéricas, ofrezco artesanía digital. Me tomo el tiempo de conocerte, ir a tu local u oficina, y capturar la esencia de tu marca en una web única.
+              Mi objetivo es llevar tu negocio al mundo digital con profesionalismo. Ofrezco un trato directo y personalizado, visitándote para entender tus necesidades reales.
             </p>
             
             <div className="space-y-4 pt-4">
               {[
-                "Atención personalizada a domicilio",
-                "Diseños únicos, nada de plantillas repetidas",
-                "Soporte técnico directo conmigo",
-                "Precios transparentes, sin sorpresas"
+                "Desarrollo de Software a Medida",
+                "Diseño Web Moderno (HTML/CSS)",
+                "Integración de Bases de Datos",
+                "Soporte y Mantenimiento Personalizado"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
@@ -276,7 +276,9 @@ function About() {
             </div>
             
             <div className="pt-6">
-              <Button className="rounded-full px-8">Conoce más sobre mí</Button>
+              <Button className="rounded-full px-8">
+                <a href="#contact">Contáctame</a>
+              </Button>
             </div>
           </div>
         </div>
@@ -336,15 +338,15 @@ function Contact() {
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
                     <Phone className="w-5 h-5 text-primary-foreground/70" />
-                    <span>+123 456 7890</span>
+                    <span>+54 9 381 446 8379</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-primary-foreground/70" />
-                    <span>contacto@webdomicilio.com</span>
+                    <span>jhoelalbornoz8989@gmail.com</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="w-5 h-5 text-primary-foreground/70" />
-                    <span>Servicio a Domicilio</span>
+                    <span>Tucumán, Argentina</span>
                   </div>
                 </div>
               </div>
@@ -403,7 +405,7 @@ function Footer() {
         </div>
         
         <div className="text-sm text-muted-foreground text-center md:text-right">
-          <p>© 2024 WebDomicilio. Todos los derechos reservados.</p>
+          <p>© 2025 Jhoel Fernando Albornoz. Todos los derechos reservados.</p>
           <p className="mt-1">Diseñado con pasión y minimalismo.</p>
         </div>
       </div>
