@@ -464,7 +464,7 @@ function Contact() {
     queryKey: ["bookedSlots", formData.date],
     queryFn: async () => {
       if (!formData.date) return [];
-      const res = await fetch(`/api/appointments/booked-slots?date=${formData.date}`);
+      const res = await fetch(`https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments/booked-slots?date=${formData.date}`);
       return res.json();
     },
     enabled: !!formData.date,
@@ -511,7 +511,7 @@ function Contact() {
     }
 
     try {
-      const response = await fetch("/api/appointments", {
+      const response = await fetch("https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

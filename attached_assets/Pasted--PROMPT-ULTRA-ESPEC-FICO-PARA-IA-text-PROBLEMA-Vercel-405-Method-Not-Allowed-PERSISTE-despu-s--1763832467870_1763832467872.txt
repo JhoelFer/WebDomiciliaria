@@ -1,0 +1,105 @@
+🤖 PROMPT ULTRA-ESPECÍFICO PARA IA:
+text
+PROBLEMA: Vercel 405 Method Not Allowed PERSISTE después de múltiples intentos
+
+ERROR EN CONSOLA EXACTO:
+/api/appointments:1 Failed to load resource: the server responded with a status of 405 ()
+
+text
+
+SITUACIÓN ACTUAL:
+- ✅ Backend Replit: FUNCIONA (POST /api/appointments guarda en DB)
+- ✅ Frontend Vercel: React + Vite, fetch POST a "/api/appointments"
+- ❌ Vercel Serverless Function: NO SE EJECUTA, devuelve 405 inmediato
+- ❌ Network tab muestra request bloqueada por Vercel
+
+DIAGNÓSTICO:
+Vercel NO está reconociendo/mi archivo /api/appointments.js (o .ts) como Serverless Function válida. En su lugar, está aplicando algún default handler que rechaza POST.
+
+SOLUCIONES INTENTADAS (Y FALLIDAS):
+1. ✅ Verificar rutas coinciden (/api/appointments → /api/appointments)
+2. ✅ Backend funciona con requests directas
+3. ✅ CORS configurado en backend
+4. ❌ Archivo API en Vercel no se ejecuta
+
+SOLUCIONES INMEDIATAS REQUERIDAS (POR PRIORIDAD):
+
+SOLUCIÓN 1: ELIMINAR API PROXY - LLAMAR DIRECTAMENTE
+```javascript
+// En frontend, reemplazar:
+const response = await fetch("/api/appointments", {
+// POR:
+const response = await fetch("https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments", {
+SOLUCIÓN 2: VERIFICAR ESTRUCTURA DE ARCHIVO API
+
+¿/api/appointments.js existe en raíz del proyecto?
+
+¿Tiene exports correctos?
+
+¿Vercel lo detecta como Function?
+
+SOLUCIÓN 3: CONFIGURACIÓN VERCEL.JSON CRÍTICA
+
+json
+{
+  "version": 3,
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
+SOLUCIÓN 4: USAR APP ROUTER STRUCTURE
+Crear: /api/appointments/route.js
+
+javascript
+export async function POST(request) {
+  const body = await request.json();
+  const backendURL = process.env.BACKEND_URL;
+  
+  const response = await fetch(`${backendURL}/api/appointments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  
+  const data = await response.json();
+  return new Response(JSON.stringify(data), {
+    status: response.status,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+NECESITO RESPUESTA CONCRETA:
+
+¿Por qué Vercel ignora mi /api/appointments.js?
+
+¿Cómo forzar a Vercel a ejecutar mi Serverless Function?
+
+¿Configuración exacta de vercel.json para este caso?
+
+¿Debug steps para verificar por qué el archivo no se ejecuta?
+
+URLS:
+
+Frontend: https://web-domiciliaria-naoz-9tt834ydv.vercel.app
+
+Backend: https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev
+
+text
+
+## 🚨 **MI RECOMENDACIÓN PERSONAL:**
+
+**Hacé la SOLUCIÓN 1 YA MISMO** - Es 100% funcional:
+1. Abrí tu `src/pages/home.tsx`
+2. Buscá el `fetch("/api/appointments"`
+3. Cambialo por el URL completo de Replit
+4. Deploy y TEST
+
+**¡Eso SÍ funciona!** Mientras la IA te da vueltas, vos ya tenés el sistema andando. 😄
+
+**¿Querés que te guíe para hacer ese cambio específico?**

@@ -99,14 +99,14 @@ function AppointmentsList() {
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments"],
     queryFn: async () => {
-      const res = await fetch("/api/appointments");
+      const res = await fetch("https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments");
       return res.json() as Promise<Appointment[]>;
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const res = await fetch(`/api/appointments/${id}`, {
+      const res = await fetch(`https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -120,7 +120,7 @@ function AppointmentsList() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/appointments/${id}`, {
+      const res = await fetch(`https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments/${id}`, {
         method: "DELETE",
       });
       return res.json();
