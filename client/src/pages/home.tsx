@@ -11,12 +11,16 @@ import {
   Phone, 
   MapPin,
   Code2,
-  Layout
+  Layout,
+  Calendar,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import heroImage from "@assets/generated_images/modern_minimalist_workspace_with_soft_celeste_lighting.png";
 
 export default function Home() {
@@ -173,18 +177,18 @@ function Services() {
   const services = [
     {
       icon: <Monitor className="h-6 w-6 text-primary" />,
-      title: "Diseño Web Moderno",
-      description: "Sitios web visualmente impactantes que se adaptan a cualquier dispositivo. Estética minimalista y funcional."
+      title: "Landing Pages Especializadas",
+      description: "Páginas de aterrizaje diseñadas para convertir visitantes en clientes. Ideales para promociones o productos específicos."
     },
     {
       icon: <Smartphone className="h-6 w-6 text-primary" />,
-      title: "Optimizado para Móvil",
-      description: "Tu página se verá perfecta en celulares, tablets y computadoras. La experiencia de usuario es mi prioridad."
+      title: "Sitios Informativos",
+      description: "Presenta tu negocio al mundo con una web profesional, rápida y segura. Sin complicaciones de bases de datos."
     },
     {
       icon: <Globe className="h-6 w-6 text-primary" />,
-      title: "Posicionamiento SEO",
-      description: "Estructuro tu sitio para que Google lo ame y tus clientes te encuentren fácilmente en las búsquedas."
+      title: "Portafolios y Catálogos",
+      description: "Muestra tu trabajo o productos con una galería elegante y moderna. Perfecto para profesionales y creativos."
     }
   ];
 
@@ -192,10 +196,10 @@ function Services() {
     <section id="services" className="py-20 bg-secondary/30">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 text-slate-900">Soluciones Digitales a Tu Medida</h2>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 text-slate-900">Webs Estáticas de Alto Impacto</h2>
           <p className="text-muted-foreground">
-            No solo hago páginas web, construyo herramientas que ayudan a tu negocio a crecer.
-            Todo con un diseño limpio y profesional.
+            Me especializo en crear sitios web rápidos, seguros y sin mantenimiento complejo. 
+            Olvídate de las bases de datos y los errores de servidor.
           </p>
         </div>
         
@@ -242,29 +246,29 @@ function About() {
                 <Code2 className="w-12 h-12 text-primary mb-6" />
                 <h3 className="text-2xl font-heading font-bold mb-4">Hola, soy Jhoel Fernando Albornoz</h3>
                 <p className="text-slate-300 leading-relaxed mb-6">
-                  Soy Técnico Superior en Desarrollo de Software en formación, apasionado por crear soluciones tecnológicas eficientes y modernas.
+                  Soy Técnico Superior en Desarrollo de Software en formación, enfocado exclusivamente en el desarrollo frontend y diseño web.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
-                  Combino mi sólida base técnica en programación (C#, Python, MySQL) con el diseño web para ofrecer sitios que no solo se ven bien, sino que funcionan perfecto. Me caracterizo por mi aprendizaje rápido y compromiso total con cada proyecto.
+                  Me dedico a crear experiencias web puras, sin la complejidad de bases de datos. Esto garantiza sitios más rápidos, seguros y económicos de mantener. Mi compromiso es entregarte una web que funcione perfecta desde el primer día.
                 </p>
               </div>
             </div>
           </div>
           <div className="md:w-1/2 space-y-6">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-slate-900">
-              Más que un desarrollador, <br />
-              <span className="text-primary">tu socio tecnológico.</span>
+              Diseño web puro, <br />
+              <span className="text-primary">sin complicaciones.</span>
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Mi objetivo es llevar tu negocio al mundo digital con profesionalismo. Ofrezco un trato directo y personalizado, visitándote para entender tus necesidades reales.
+              Mi objetivo es llevar tu negocio al mundo digital de la forma más eficiente posible. Me especializo en sitios informativos y landing pages que no requieren gestión de bases de datos.
             </p>
             
             <div className="space-y-4 pt-4">
               {[
-                "Desarrollo de Software a Medida",
-                "Diseño Web Moderno (HTML/CSS)",
-                "Integración de Bases de Datos",
-                "Soporte y Mantenimiento Personalizado"
+                "Sitios Web Informativos y Rápidos",
+                "Diseño Moderno y Responsivo",
+                "Sin Mantenimiento de Bases de Datos",
+                "Atención Personalizada a Domicilio"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
@@ -277,7 +281,7 @@ function About() {
             
             <div className="pt-6">
               <Button className="rounded-full px-8">
-                <a href="#contact">Contáctame</a>
+                <a href="#contact">Agendar Visita</a>
               </Button>
             </div>
           </div>
@@ -323,66 +327,167 @@ function WhyChooseMe() {
 }
 
 function Contact() {
+  const [contactMethod, setContactMethod] = useState("whatsapp");
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    date: "",
+    time: "",
+    message: ""
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const text = `Hola Jhoel, soy ${formData.name}. Me gustaría agendar una visita para el día ${formData.date} a las ${formData.time}. 
+    
+Mi teléfono es: ${formData.phone}
+Detalles: ${formData.message}`;
+
+    if (contactMethod === "whatsapp") {
+      const encodedText = encodeURIComponent(text);
+      window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
+    } else {
+      const subject = encodeURIComponent("Consulta para visita a domicilio");
+      const body = encodeURIComponent(text);
+      window.location.href = `mailto:jhoelalbornoz8989@gmail.com?subject=${subject}&body=${body}`;
+    }
+  };
+
   return (
     <section id="contact" className="py-20">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-border">
+        <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-border">
           <div className="flex flex-col md:flex-row">
             <div className="md:w-2/5 bg-primary p-10 text-white flex flex-col justify-between">
               <div>
-                <h3 className="font-heading text-2xl font-bold mb-4">Hablemos de tu proyecto</h3>
+                <h3 className="font-heading text-2xl font-bold mb-4">Agenda tu Visita</h3>
                 <p className="text-primary-foreground/80 mb-8">
-                  Déjame tus datos y me pondré en contacto contigo para agendar una visita o llamada.
+                  Selecciona la fecha y hora que prefieras para que visite tu local u oficina. Te confirmaré la cita por el medio que elijas.
                 </p>
                 
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-primary-foreground/70" />
-                    <span>+54 9 381 446 8379</span>
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs opacity-70">Llamadas y WhatsApp</p>
+                      <p className="font-medium">+54 9 381 446 8379</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-primary-foreground/70" />
-                    <span>jhoelalbornoz8989@gmail.com</span>
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs opacity-70">Correo Electrónico</p>
+                      <p className="font-medium text-sm">jhoelalbornoz8989@gmail.com</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-primary-foreground/70" />
-                    <span>Tucumán, Argentina</span>
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs opacity-70">Zona de Cobertura</p>
+                      <p className="font-medium">Tucumán, Argentina</p>
+                    </div>
                   </div>
                 </div>
               </div>
               
               <div className="mt-12">
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <Code2 className="w-8 h-8 text-white" />
+                  <Calendar className="w-8 h-8 text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="md:w-3/5 p-10">
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div className="md:w-3/5 p-8 md:p-12">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Nombre</label>
-                    <Input placeholder="Tu nombre" className="bg-slate-50 border-slate-200" />
+                    <Label htmlFor="name">Nombre Completo</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="Tu nombre" 
+                      className="bg-slate-50 border-slate-200"
+                      required 
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Teléfono</label>
-                    <Input placeholder="Tu número" className="bg-slate-50 border-slate-200" />
+                    <Label htmlFor="phone">Teléfono de Contacto</Label>
+                    <Input 
+                      id="phone" 
+                      placeholder="+54 9..." 
+                      className="bg-slate-50 border-slate-200"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Fecha Preferida</Label>
+                    <Input 
+                      id="date" 
+                      type="date" 
+                      className="bg-slate-50 border-slate-200"
+                      required
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Hora Preferida</Label>
+                    <Input 
+                      id="time" 
+                      type="time" 
+                      className="bg-slate-50 border-slate-200"
+                      required
+                      value={formData.time}
+                      onChange={(e) => setFormData({...formData, time: e.target.value})}
+                    />
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input type="email" placeholder="tu@email.com" className="bg-slate-50 border-slate-200" />
+                <div className="space-y-3">
+                  <Label>¿Cómo prefieres enviar la solicitud?</Label>
+                  <RadioGroup defaultValue="whatsapp" onValueChange={setContactMethod} className="flex gap-4">
+                    <div className="flex items-center space-x-2 border border-slate-200 p-3 rounded-lg flex-1 hover:bg-slate-50 cursor-pointer transition-colors">
+                      <RadioGroupItem value="whatsapp" id="r1" />
+                      <Label htmlFor="r1" className="flex items-center gap-2 cursor-pointer">
+                        <MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border border-slate-200 p-3 rounded-lg flex-1 hover:bg-slate-50 cursor-pointer transition-colors">
+                      <RadioGroupItem value="email" id="r2" />
+                      <Label htmlFor="r2" className="flex items-center gap-2 cursor-pointer">
+                        <Mail className="w-4 h-4 text-blue-500" /> Email
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">¿Cómo puedo ayudarte?</label>
-                  <Textarea placeholder="Cuéntame brevemente sobre tu idea..." className="bg-slate-50 border-slate-200 min-h-[120px]" />
+                  <Label htmlFor="message">Detalles adicionales (Opcional)</Label>
+                  <Textarea 
+                    id="message" 
+                    placeholder="Dirección del local, tipo de negocio, etc..." 
+                    className="bg-slate-50 border-slate-200 min-h-[80px]"
+                    value={formData.message}
+                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                  />
                 </div>
                 
-                <Button className="w-full rounded-lg h-11 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
-                  Enviar Mensaje
+                <Button type="submit" className="w-full rounded-lg h-12 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+                  {contactMethod === 'whatsapp' ? 'Agendar por WhatsApp' : 'Agendar por Correo'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
             </div>
