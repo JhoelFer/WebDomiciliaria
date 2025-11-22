@@ -14,7 +14,11 @@ import {
   Code2,
   Layout,
   Calendar,
-  MessageCircle
+  MessageCircle,
+  Zap,
+  DollarSign,
+  Users,
+  Headphones
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +35,7 @@ export default function Home() {
       <Hero />
       <Services />
       <About />
+      <BenefitsOfDomiciliary />
       <WhyChooseMe />
       <Contact />
       <Footer />
@@ -282,6 +287,121 @@ function About() {
             <div className="pt-6">
               <Button className="rounded-full px-8">
                 <a href="#contact">Agendar Visita</a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BenefitsOfDomiciliary() {
+  return (
+    <section id="beneficios-domiciliarios" className="py-20">
+      <div className="container mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 text-slate-900">
+            ¿Por qué elegir un servicio <span className="text-primary">a domicilio</span>?
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Olvídate de agencias costosas y constructores limitados. Tenemos una mejor alternativa.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white border border-border rounded-2xl p-8 shadow-lg shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-6">
+              <DollarSign className="text-primary" size={24} />
+            </div>
+            <h3 className="font-heading text-xl font-bold mb-3 text-slate-900">Presupuestos Justos</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Sin comisiones de agencias infladas. Pagas exactamente por lo que recibes, sin márgenes intermediarios.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="bg-white border border-border rounded-2xl p-8 shadow-lg shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-6">
+              <Headphones className="text-primary" size={24} />
+            </div>
+            <h3 className="font-heading text-xl font-bold mb-3 text-slate-900">Atención Personal</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              No eres un ticket de soporte. Voy a tu domicilio para entender tu negocio de cerca y crear algo único.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="bg-white border border-border rounded-2xl p-8 shadow-lg shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-6">
+              <Zap className="text-primary" size={24} />
+            </div>
+            <h3 className="font-heading text-xl font-bold mb-3 text-slate-900">Webs Rápidas y Seguras</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Sin bases de datos complejas significa sitios más rápidos, más seguros y que no requieren mantenimiento constante.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="bg-white border border-border rounded-2xl p-8 shadow-lg shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-6">
+              <Users className="text-primary" size={24} />
+            </div>
+            <h3 className="font-heading text-xl font-bold mb-3 text-slate-900">Diseño Personalizado</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Olvídate de templates genéricos. Creo sitios únicos que reflejan tu identidad y objetivos de negocio.
+            </p>
+          </motion.div>
+        </div>
+
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-2xl p-8 md:p-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="md:w-1/2">
+              <h3 className="font-heading text-2xl font-bold text-slate-900 mb-3">
+                ¿Cansado de agencias impersonales?
+              </h3>
+              <p className="text-muted-foreground mb-4 leading-relaxed">
+                Con un servicio a domicilio, tienes a alguien que entiende tu negocio, se compromete con tu éxito y está disponible cuando lo necesitas. Es la forma más eficiente y económica de llevar tu negocio a internet.
+              </p>
+              <ul className="space-y-2">
+                {[
+                  "Consulta inicial sin costo",
+                  "Sólo pagas lo que necesitas",
+                  "Soporte directo y rápido"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2 text-slate-700">
+                    <CheckCircle2 size={18} className="text-primary flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="md:w-1/2 flex justify-center">
+              <Button size="lg" className="rounded-full px-8 shadow-lg shadow-primary/20">
+                <a href="#contact" className="flex items-center">
+                  Agenda tu Consulta Gratis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
               </Button>
             </div>
           </div>
