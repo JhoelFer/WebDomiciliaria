@@ -1,3 +1,4 @@
+// Fixed CORS API routes issue for Vercel deployment
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
