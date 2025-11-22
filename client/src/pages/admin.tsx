@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone } from "lucide-react";
+import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home } from "lucide-react";
 import type { Appointment } from "@shared/schema";
 
 export default function Admin() {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -62,20 +64,30 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-slate-50">
       <nav className="bg-white border-b border-border sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="font-heading font-bold text-xl text-slate-900">Dashboard Admin</h1>
-          <Button
-            variant="outline"
-            onClick={() => setIsAuthenticated(false)}
-            className="gap-2"
-          >
-            <LogOut size={18} />
-            Salir
-          </Button>
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center gap-4">
+          <h1 className="font-heading font-bold text-lg md:text-xl text-slate-900">Dashboard Admin</h1>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/")}
+              className="gap-2"
+            >
+              <Home size={18} />
+              <span className="hidden sm:inline">Inicio</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsAuthenticated(false)}
+              className="gap-2"
+            >
+              <LogOut size={18} />
+              <span className="hidden sm:inline">Salir</span>
+            </Button>
+          </div>
         </div>
       </nav>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
         <AppointmentsList />
       </div>
     </div>
@@ -116,35 +128,35 @@ function AppointmentsList() {
 
   return (
     <div className="space-y-8">
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+        <Card className="h-24 sm:h-auto">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Solicitudes Pendientes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-primary">{pending.length}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-primary">{pending.length}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="h-24 sm:h-auto">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Citas Confirmadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-green-600">{confirmed.length}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-green-600">{confirmed.length}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="h-24 sm:h-auto">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total de Solicitudes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-slate-900">{appointments.length}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-slate-900">{appointments.length}</p>
           </CardContent>
         </Card>
       </div>
@@ -181,12 +193,12 @@ function Section({
           {appointments.map((apt) => (
             <div
               key={apt.id}
-              className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+              className="border border-border rounded-lg p-3 sm:p-4 hover:bg-slate-50 transition-colors"
             >
-              <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-bold text-slate-900">{apt.name}</h4>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <h4 className="font-bold text-sm sm:text-base text-slate-900">{apt.name}</h4>
                     <Badge
                       variant={
                         apt.status === "confirmed"
@@ -195,6 +207,7 @@ function Section({
                             ? "destructive"
                             : "secondary"
                       }
+                      className="text-xs"
                     >
                       {apt.status === "pending"
                         ? "Pendiente"
@@ -203,27 +216,27 @@ function Section({
                           : "Cancelada"}
                     </Badge>
                   </div>
-                  <div className="space-y-1 text-sm text-muted-foreground">
+                  <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Phone size={14} />
-                      {apt.phone}
+                      <span className="break-all">{apt.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock size={14} />
-                      {apt.date} a las {apt.time}
+                      {apt.date} {apt.time}
                     </div>
-                    {apt.message && <p className="text-xs mt-2 italic">{apt.message}</p>}
+                    {apt.message && <p className="text-xs mt-2 italic line-clamp-2">{apt.message}</p>}
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-3 border-t border-border">
+              <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border">
                 {apt.status !== "confirmed" && (
                   <Button
                     size="sm"
                     onClick={() => updateMutation.mutate({ id: apt.id, status: "confirmed" })}
                     disabled={updateMutation.isPending}
-                    className="gap-2"
+                    className="gap-2 text-xs sm:text-sm"
                   >
                     <CheckCircle2 size={16} />
                     Confirmar
@@ -235,7 +248,7 @@ function Section({
                     variant="destructive"
                     onClick={() => updateMutation.mutate({ id: apt.id, status: "cancelled" })}
                     disabled={updateMutation.isPending}
-                    className="gap-2"
+                    className="gap-2 text-xs sm:text-sm"
                   >
                     <X size={16} />
                     Cancelar

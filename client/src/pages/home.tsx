@@ -107,11 +107,10 @@ function Hero() {
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button size="lg" className="text-base px-8 h-12 rounded-full shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300">
-                Agendar Consulta Gratis
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="lg" className="text-base px-8 h-12 rounded-full border-2 hover:bg-accent/50">
-                Ver Portafolio
+                <a href="#contact" className="flex items-center">
+                  Agendar Consulta Gratis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
               </Button>
             </div>
             
