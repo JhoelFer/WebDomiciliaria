@@ -9,8 +9,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertAppointmentSchema.parse(req.body);
       const appointment = await storage.createAppointment(validatedData);
       res.json(appointment);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid appointment data" });
+    } catch (error: any) {
+      // Manejo detallado de errores de validación
+      if (error.errors && Array.isArray(error.errors)) {
+        const phoneError = error.errors.find((e: any) => e.path.includes("phone"));
+        if (phoneError) {
+          return res.status(400).json({ error: "Número de teléfono argentino inválido. Usa formatos como: +54 9 381 446 8379 o 3814468379" });
+        }
+        const firstError = error.errors[0]?.message || "Datos inválidos";
+        return res.status(400).json({ error: firstError });
+      }
+      res.status(400).json({ error: "Error al procesar tu solicitud. Verifica que todos los campos sean correctos." });
     }
   });
 

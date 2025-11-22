@@ -456,6 +456,9 @@ function Contact() {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  
   const { data: bookedSlots = [] } = useQuery({
     queryKey: ["bookedSlots", formData.date],
     queryFn: async () => {
@@ -466,9 +469,45 @@ function Contact() {
     enabled: !!formData.date,
   });
 
+  const validateArgentinePhone = (phone: string) => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.startsWith("54")) {
+      return cleanPhone.length === 13;
+    } else {
+      return cleanPhone.length === 10 || cleanPhone.length === 11;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
     setIsSubmitting(true);
+
+    // Validaciones en el frontend
+    if (!formData.name.trim()) {
+      setErrorMessage("Por favor, ingresa tu nombre.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!validateArgentinePhone(formData.phone)) {
+      setErrorMessage("Número de teléfono inválido. Usa formatos como: +54 9 381 446 8379 o 3814468379");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.date) {
+      setErrorMessage("Por favor, selecciona una fecha.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.time) {
+      setErrorMessage("Por favor, selecciona una hora.");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/appointments", {
@@ -481,17 +520,20 @@ function Contact() {
         const text = `Hola Jhoel, soy ${formData.name}. Me gustaría agendar una visita para el día ${formData.date} a las ${formData.time}. 
     
 Mi teléfono es: ${formData.phone}
-Detalles: ${formData.message}`;
+Detalles: ${formData.message || "Sin detalles adicionales"}`;
 
         const encodedText = encodeURIComponent(text);
         window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
         
+        setSuccessMessage("¡Solicitud registrada! Se abrirá WhatsApp para confirmar los detalles.");
         setFormData({ name: "", phone: "", date: "", time: "", message: "" });
+        setTimeout(() => setSuccessMessage(""), 5000);
       } else {
-        alert("Error al guardar la solicitud. Intenta de nuevo.");
+        const errorData = await response.json();
+        setErrorMessage(errorData.error || "Error al guardar la solicitud. Por favor intenta de nuevo.");
       }
     } catch (error) {
-      alert("Error al guardar la solicitud. Intenta de nuevo.");
+      setErrorMessage("No se pudo conectar con el servidor. Verifica tu conexión a internet.");
     } finally {
       setIsSubmitting(false);
     }
@@ -563,40 +605,55 @@ Detalles: ${formData.message}`;
               </div>
             </div>
             
-            <div className="md:w-3/5 p-8 md:p-12">
+            <div className="md:w-3/5 p-6 md:p-12 overflow-y-auto max-h-screen">
               <form className="space-y-6" onSubmit={handleSubmit}>
-                <div className="grid md:grid-cols-2 gap-6">
+                {errorMessage && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {errorMessage}
+                  </div>
+                )}
+                
+                {successMessage && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                    {successMessage}
+                  </div>
+                )}
+
+                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre Completo</Label>
+                    <Label htmlFor="name" className="text-sm">Nombre Completo</Label>
                     <Input 
                       id="name" 
                       placeholder="Tu nombre" 
-                      className="bg-slate-50 border-slate-200"
+                      className="bg-slate-50 border-slate-200 h-10"
                       required 
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Teléfono (WhatsApp)</Label>
+                    <Label htmlFor="phone" className="text-sm">Teléfono (WhatsApp)</Label>
                     <Input 
                       id="phone" 
-                      placeholder="+54 9..." 
-                      className="bg-slate-50 border-slate-200"
+                      placeholder="+54 9 381..." 
+                      className="bg-slate-50 border-slate-200 h-10"
                       required
+                      type="tel"
+                      inputMode="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     />
+                    <p className="text-xs text-muted-foreground">Formatos válidos: +54 9 381... o 3814468379</p>
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="date">Fecha Preferida</Label>
+                    <Label htmlFor="date" className="text-sm">Fecha Preferida</Label>
                     <Input 
                       id="date" 
                       type="date" 
-                      className="bg-slate-50 border-slate-200"
+                      className="bg-slate-50 border-slate-200 h-10"
                       required
                       min={new Date().toISOString().split('T')[0]}
                       value={formData.date}
@@ -604,20 +661,20 @@ Detalles: ${formData.message}`;
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="time">Hora Preferida</Label>
+                    <Label className="text-sm">Hora Preferida</Label>
                     {!formData.date ? (
-                      <div className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-muted-foreground items-center">
+                      <div className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-muted-foreground items-center">
                         Selecciona una fecha primero
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-1">
                         {availableHours.map((hour) => (
                           <button
                             key={hour}
                             type="button"
                             onClick={() => setFormData({...formData, time: hour})}
                             disabled={isSlotBooked(hour)}
-                            className={`py-2 px-2 rounded-md text-xs font-medium transition-all ${
+                            className={`py-2 px-1 rounded-md text-xs font-medium transition-all ${
                               isSlotBooked(hour)
                                 ? "bg-slate-100 text-slate-400 cursor-not-allowed line-through"
                                 : formData.time === hour
@@ -630,16 +687,16 @@ Detalles: ${formData.message}`;
                         ))}
                       </div>
                     )}
-                    <p className="text-[10px] text-muted-foreground">Gris: horario ocupado | Confirmación por WhatsApp</p>
+                    <p className="text-[10px] text-muted-foreground">Gris: ocupado</p>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="message">Detalles adicionales (Opcional)</Label>
+                  <Label htmlFor="message" className="text-sm">Detalles adicionales (Opcional)</Label>
                   <Textarea 
                     id="message" 
-                    placeholder="Dirección del local, tipo de negocio, o consulta específica..." 
-                    className="bg-slate-50 border-slate-200 min-h-[80px]"
+                    placeholder="Dirección del local, tipo de negocio, o consulta..." 
+                    className="bg-slate-50 border-slate-200 min-h-[60px] text-sm"
                     value={formData.message}
                     onChange={(e) => setFormData({...formData, message: e.target.value})}
                   />
@@ -647,14 +704,14 @@ Detalles: ${formData.message}`;
                 
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full rounded-lg h-12 text-base font-medium shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:bg-green-600 bg-green-500 transition-all"
+                  disabled={isSubmitting || !formData.name || !formData.phone || !formData.date || !formData.time}
+                  className="w-full rounded-lg h-12 text-sm md:text-base font-medium shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:bg-green-600 bg-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <MessageCircle className="mr-2 h-5 w-5" />
-                  {isSubmitting ? "Guardando..." : "Confirmar Solicitud por WhatsApp"}
+                  {isSubmitting ? "Guardando..." : "Confirmar Solicitud"}
                 </Button>
-                <p className="text-xs text-center text-muted-foreground mt-4">
-                  Al hacer clic, se abrirá WhatsApp para enviar los detalles de tu cita.
+                <p className="text-xs text-center text-muted-foreground">
+                  Se abrirá WhatsApp para confirmar tu cita.
                 </p>
               </form>
             </div>
