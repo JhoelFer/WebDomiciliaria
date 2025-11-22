@@ -529,11 +529,20 @@ Detalles: ${formData.message || "Sin detalles adicionales"}`;
         setFormData({ name: "", phone: "", date: "", time: "", message: "" });
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.error || "Error al guardar la solicitud. Por favor intenta de nuevo.");
+        try {
+          const errorData = await response.json();
+          setErrorMessage(errorData.error || "Error al guardar la solicitud. Por favor intenta de nuevo.");
+        } catch {
+          setErrorMessage(`Error ${response.status}: Intenta de nuevo o verifica tu conexión.`);
+        }
       }
-    } catch (error) {
-      setErrorMessage("No se pudo conectar con el servidor. Verifica tu conexión a internet.");
+    } catch (error: any) {
+      console.error("Error details:", error);
+      if (error.message === "Failed to fetch") {
+        setErrorMessage("No se puede conectar al servidor. Recarga la página (F5) e intenta de nuevo.");
+      } else {
+        setErrorMessage("Error de conexión. Verifica tu internet e intenta de nuevo.");
+      }
     } finally {
       setIsSubmitting(false);
     }
