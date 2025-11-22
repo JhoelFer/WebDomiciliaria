@@ -327,7 +327,6 @@ function WhyChooseMe() {
 }
 
 function Contact() {
-  const [contactMethod, setContactMethod] = useState("whatsapp");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -344,14 +343,8 @@ function Contact() {
 Mi teléfono es: ${formData.phone}
 Detalles: ${formData.message}`;
 
-    if (contactMethod === "whatsapp") {
-      const encodedText = encodeURIComponent(text);
-      window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
-    } else {
-      const subject = encodeURIComponent("Consulta para visita a domicilio");
-      const body = encodeURIComponent(text);
-      window.location.href = `mailto:jhoelalbornoz8989@gmail.com?subject=${subject}&body=${body}`;
-    }
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/5493814468379?text=${encodedText}`, '_blank');
   };
 
   return (
@@ -363,7 +356,7 @@ Detalles: ${formData.message}`;
               <div>
                 <h3 className="font-heading text-2xl font-bold mb-4">Agenda tu Visita</h3>
                 <p className="text-primary-foreground/80 mb-8">
-                  Selecciona la fecha y hora que prefieras para que visite tu local u oficina. Te confirmaré la cita por el medio que elijas.
+                  Selecciona tu horario preferido. La confirmación final de la visita se realizará directamente por WhatsApp.
                 </p>
                 
                 <div className="space-y-6">
@@ -372,19 +365,28 @@ Detalles: ${formData.message}`;
                       <Phone className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs opacity-70">Llamadas y WhatsApp</p>
+                      <p className="text-xs opacity-70">WhatsApp Directo</p>
                       <p className="font-medium">+54 9 381 446 8379</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs opacity-70">Correo Electrónico</p>
-                      <p className="font-medium text-sm">jhoelalbornoz8989@gmail.com</p>
-                    </div>
+                  
+                  <div className="p-4 bg-white/10 rounded-xl border border-white/10">
+                    <p className="font-bold text-sm mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Horarios Disponibles
+                    </p>
+                    <ul className="space-y-1 text-sm opacity-90">
+                      <li className="flex justify-between">
+                        <span>Lunes - Viernes:</span>
+                        <span className="font-medium">9:00 - 18:00</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Sábados:</span>
+                        <span className="font-medium">9:00 - 13:00</span>
+                      </li>
+                    </ul>
                   </div>
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                       <MapPin className="w-5 h-5" />
@@ -399,7 +401,7 @@ Detalles: ${formData.message}`;
               
               <div className="mt-12">
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <Calendar className="w-8 h-8 text-white" />
+                  <MessageCircle className="w-8 h-8 text-white" />
                 </div>
               </div>
             </div>
@@ -419,7 +421,7 @@ Detalles: ${formData.message}`;
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Teléfono de Contacto</Label>
+                    <Label htmlFor="phone">Teléfono (WhatsApp)</Label>
                     <Input 
                       id="phone" 
                       placeholder="+54 9..." 
@@ -439,56 +441,57 @@ Detalles: ${formData.message}`;
                       type="date" 
                       className="bg-slate-50 border-slate-200"
                       required
+                      min={new Date().toISOString().split('T')[0]}
                       value={formData.date}
                       onChange={(e) => setFormData({...formData, date: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="time">Hora Preferida</Label>
-                    <Input 
-                      id="time" 
-                      type="time" 
-                      className="bg-slate-50 border-slate-200"
+                    <select
+                      id="time"
+                      className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       required
                       value={formData.time}
                       onChange={(e) => setFormData({...formData, time: e.target.value})}
-                    />
+                    >
+                      <option value="">Selecciona una hora</option>
+                      <optgroup label="Mañana">
+                        <option value="09:00">09:00 hs</option>
+                        <option value="10:00">10:00 hs</option>
+                        <option value="11:00">11:00 hs</option>
+                        <option value="12:00">12:00 hs</option>
+                      </optgroup>
+                      <optgroup label="Tarde">
+                        <option value="14:00">14:00 hs</option>
+                        <option value="15:00">15:00 hs</option>
+                        <option value="16:00">16:00 hs</option>
+                        <option value="17:00">17:00 hs</option>
+                        <option value="18:00">18:00 hs</option>
+                      </optgroup>
+                    </select>
+                    <p className="text-[10px] text-muted-foreground">Sujeto a confirmación por WhatsApp</p>
                   </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <Label>¿Cómo prefieres enviar la solicitud?</Label>
-                  <RadioGroup defaultValue="whatsapp" onValueChange={setContactMethod} className="flex gap-4">
-                    <div className="flex items-center space-x-2 border border-slate-200 p-3 rounded-lg flex-1 hover:bg-slate-50 cursor-pointer transition-colors">
-                      <RadioGroupItem value="whatsapp" id="r1" />
-                      <Label htmlFor="r1" className="flex items-center gap-2 cursor-pointer">
-                        <MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 border border-slate-200 p-3 rounded-lg flex-1 hover:bg-slate-50 cursor-pointer transition-colors">
-                      <RadioGroupItem value="email" id="r2" />
-                      <Label htmlFor="r2" className="flex items-center gap-2 cursor-pointer">
-                        <Mail className="w-4 h-4 text-blue-500" /> Email
-                      </Label>
-                    </div>
-                  </RadioGroup>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="message">Detalles adicionales (Opcional)</Label>
                   <Textarea 
                     id="message" 
-                    placeholder="Dirección del local, tipo de negocio, etc..." 
+                    placeholder="Dirección del local, tipo de negocio, o consulta específica..." 
                     className="bg-slate-50 border-slate-200 min-h-[80px]"
                     value={formData.message}
                     onChange={(e) => setFormData({...formData, message: e.target.value})}
                   />
                 </div>
                 
-                <Button type="submit" className="w-full rounded-lg h-12 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
-                  {contactMethod === 'whatsapp' ? 'Agendar por WhatsApp' : 'Agendar por Correo'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                <Button type="submit" className="w-full rounded-lg h-12 text-base font-medium shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:bg-green-600 bg-green-500 transition-all">
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Confirmar Solicitud por WhatsApp
                 </Button>
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  Al hacer clic, se abrirá WhatsApp para enviar los detalles de tu cita.
+                </p>
               </form>
             </div>
           </div>
