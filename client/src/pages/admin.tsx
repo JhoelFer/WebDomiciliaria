@@ -453,9 +453,24 @@ function QuotationManager({ queryClient }: { queryClient: any }) {
       return;
     }
 
-    const cleanPhone = formData.phone.replace(/\D/g, "");
+    let cleanPhone = formData.phone.replace(/\D/g, "");
+    
+    // Normalizar teléfono: debe tener exactamente 13 dígitos con 54
+    // Si empieza con 9 y tiene 10 dígitos, agregar 549
+    // Si no empieza con 54 y tiene 11 dígitos (con 9), agregar 54
     if (cleanPhone.length < 10) {
-      setErrorMessage("Teléfono inválido");
+      setErrorMessage("Teléfono inválido - muy corto");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!cleanPhone.startsWith("54")) {
+      cleanPhone = `54${cleanPhone}`;
+    }
+
+    // Asegurar que tiene exactamente 13 dígitos
+    if (cleanPhone.length !== 13) {
+      setErrorMessage("Teléfono debe tener exactamente 13 dígitos con código de país (54)");
       setIsSubmitting(false);
       return;
     }
@@ -467,7 +482,7 @@ function QuotationManager({ queryClient }: { queryClient: any }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          phone: cleanPhone.startsWith("54") ? cleanPhone : `54${cleanPhone}`,
+          phone: cleanPhone,
           totalPrice,
         }),
       });
