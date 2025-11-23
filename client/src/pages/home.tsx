@@ -68,9 +68,14 @@ function Navbar() {
           <a href="#about" className="hover:text-primary transition-colors">Sobre Mí</a>
           <a href="#why-me" className="hover:text-primary transition-colors">Beneficios</a>
         </div>
-        <Button className="rounded-full px-6 font-medium shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
-          <a href="#contact">Contáctame</a>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-full font-medium" data-testid="button-quoter-nav">
+            <a href="/quoter">Cotizador</a>
+          </Button>
+          <Button className="rounded-full px-6 font-medium shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+            <a href="#contact">Contáctame</a>
+          </Button>
+        </div>
       </div>
     </nav>
   );

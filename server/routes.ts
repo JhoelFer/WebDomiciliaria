@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAppointmentSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertQuotationSchema } from "@shared/schema";
 
 // API routes for appointment management - production verified
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -88,6 +88,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete appointment" });
+    }
+  });
+
+  // Quotation routes
+  app.post("/api/quotations", async (req, res) => {
+    try {
+      const validatedData = insertQuotationSchema.parse(req.body);
+      const quotation = await storage.createQuotation(validatedData);
+      res.json(quotation);
+    } catch (error: any) {
+      if (error.errors && Array.isArray(error.errors)) {
+        const phoneError = error.errors.find((e: any) => e.path.includes("phone"));
+        if (phoneError) {
+          return res.status(400).json({ error: "Número de teléfono argentino inválido" });
+        }
+        const firstError = error.errors[0]?.message || "Datos inválidos";
+        return res.status(400).json({ error: firstError });
+      }
+      res.status(400).json({ error: "Error al crear cotización" });
+    }
+  });
+
+  app.get("/api/quotations", async (req, res) => {
+    try {
+      const quotations = await storage.getQuotations();
+      res.json(quotations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quotations" });
+    }
+  });
+
+  app.get("/api/quotations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const quotation = await storage.getQuotationById(id);
+      if (!quotation) {
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+      res.json(quotation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quotation" });
+    }
+  });
+
+  app.patch("/api/quotations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status || !["pending", "accepted", "rejected"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const quotation = await storage.updateQuotationStatus(id, status);
+      if (!quotation) {
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+      
+      res.json(quotation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update quotation" });
     }
   });
 

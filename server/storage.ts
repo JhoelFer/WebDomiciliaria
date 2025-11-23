@@ -1,4 +1,4 @@
-import { type Appointment, type InsertAppointment, appointments } from "@shared/schema";
+import { type Appointment, type InsertAppointment, appointments, type Quotation, type InsertQuotation, quotations } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, gte, isNull } from "drizzle-orm";
@@ -13,6 +13,10 @@ export interface IStorage {
   updateAppointmentStatus(id: string, status: string): Promise<Appointment | undefined>;
   getConfirmedAppointments(): Promise<Appointment[]>;
   deleteAppointment(id: string): Promise<Appointment | undefined>;
+  createQuotation(quotation: InsertQuotation): Promise<Quotation>;
+  getQuotations(): Promise<Quotation[]>;
+  getQuotationById(id: string): Promise<Quotation | undefined>;
+  updateQuotationStatus(id: string, status: string): Promise<Quotation | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -65,6 +69,38 @@ export class DatabaseStorage implements IStorage {
       .where(eq(appointments.id, id))
       .returning();
     return appointment;
+  }
+
+  async createQuotation(insertQuotation: InsertQuotation): Promise<Quotation> {
+    const [quotation] = await db
+      .insert(quotations)
+      .values(insertQuotation)
+      .returning();
+    return quotation;
+  }
+
+  async getQuotations(): Promise<Quotation[]> {
+    return await db
+      .select()
+      .from(quotations)
+      .orderBy(quotations.createdAt);
+  }
+
+  async getQuotationById(id: string): Promise<Quotation | undefined> {
+    const [quotation] = await db
+      .select()
+      .from(quotations)
+      .where(eq(quotations.id, id));
+    return quotation;
+  }
+
+  async updateQuotationStatus(id: string, status: string): Promise<Quotation | undefined> {
+    const [quotation] = await db
+      .update(quotations)
+      .set({ status })
+      .where(eq(quotations.id, id))
+      .returning();
+    return quotation;
   }
 }
 

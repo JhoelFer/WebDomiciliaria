@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -34,7 +34,34 @@ export const appointments = pgTable("appointments", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export const quotations = pgTable("quotations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  serviceType: text("service_type").notNull(), // landing, corporate, ecommerce
+  pages: integer("pages").notNull().default(1),
+  customDesign: text("custom_design").notNull().default("no"), // yes/no
+  integrations: text("integrations").notNull().default("none"), // none, mercadopago, zapier, etc
+  urgency: text("urgency").notNull().default("standard"), // standard, urgent
+  discount: integer("discount").notNull().default(0), // percentage
+  totalPrice: integer("total_price").notNull(), // in ARS cents
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  createdAt: true,
+  status: true,
+}).refine((data) => {
+  return validateArgentinePhone(data.phone);
+}, {
+  message: "Número de teléfono argentino inválido. Usa formato como: +54 9 381 446 8379 o 3814468379",
+  path: ["phone"],
+});
+
+export const insertQuotationSchema = createInsertSchema(quotations).omit({
   id: true,
   createdAt: true,
   status: true,
@@ -47,3 +74,5 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
 
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
+export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
+export type Quotation = typeof quotations.$inferSelect;
