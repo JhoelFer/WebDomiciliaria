@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home, Trash2, Code2, DollarSign, TrendingUp } from "lucide-react";
+import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home, Trash2, Code2, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -137,6 +137,15 @@ export default function Admin() {
 
 function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
   const [activeTab, setActiveTab] = useState<"citas" | "cotizador" | "aprobaciones">("citas");
+  
+  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: async () => {
+      const res = await fetch(`${BACKEND_URL}/api/appointments`);
+      return res.json() as Promise<Appointment[]>;
+    },
+  });
+
   const { data: quotations = [], isLoading: quotationsLoading } = useQuery({
     queryKey: ["quotations"],
     queryFn: async () => {
@@ -145,49 +154,66 @@ function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
     },
   });
 
-  const pendingCount = quotations.filter(q => q.status === "pending").length;
-  const acceptedCount = quotations.filter(q => q.status === "accepted").length;
+  const appointmentsPending = appointments.filter(a => a.status === "pending").length;
+  const appointmentsConfirmed = appointments.filter(a => a.status === "confirmed").length;
+  const quotationsPending = quotations.filter(q => q.status === "pending").length;
+  const quotationsAccepted = quotations.filter(q => q.status === "accepted").length;
   const totalValue = quotations.reduce((sum, q) => sum + (q.totalPrice || 0), 0);
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground font-medium mb-1">Cotizaciones Pendientes</p>
-                <p className="text-3xl font-bold">{pendingCount}</p>
+      {/* Dashboard Summary - Citas y Cotizaciones */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Dashboard General</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-1">Citas Pendientes</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">{appointmentsPending}</p>
+                </div>
+                <Calendar className="text-blue-500 opacity-50" size={28} />
               </div>
-              <Clock className="text-yellow-500 opacity-50" size={32} />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground font-medium mb-1">Cotizaciones Aprobadas</p>
-                <p className="text-3xl font-bold text-green-600">{acceptedCount}</p>
+          <Card className="border-l-4 border-l-green-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-1">Citas Confirmadas</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{appointmentsConfirmed}</p>
+                </div>
+                <CheckCircle2 className="text-green-500 opacity-50" size={28} />
               </div>
-              <CheckCircle2 className="text-green-500 opacity-50" size={32} />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-l-4 border-l-primary">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground font-medium mb-1">Valor Total</p>
-                <p className="text-3xl font-bold text-primary">${(totalValue / 1000000).toFixed(1)}M</p>
+          <Card className="border-l-4 border-l-yellow-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-1">Cotizaciones Pendientes</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-yellow-600">{quotationsPending}</p>
+                </div>
+                <Clock className="text-yellow-500 opacity-50" size={28} />
               </div>
-              <DollarSign className="text-primary opacity-50" size={32} />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-1">Valor Total</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-primary">${(totalValue / 1000000).toFixed(1)}M</p>
+                </div>
+                <DollarSign className="text-primary opacity-50" size={28} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="flex gap-4 border-b overflow-x-auto">
