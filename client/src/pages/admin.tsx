@@ -453,24 +453,11 @@ function QuotationManager({ queryClient }: { queryClient: any }) {
       return;
     }
 
-    let cleanPhone = formData.phone.replace(/\D/g, "");
+    const cleanPhone = formData.phone.replace(/\D/g, "");
     
-    // Normalizar teléfono: debe tener exactamente 13 dígitos con 54
-    // Si empieza con 9 y tiene 10 dígitos, agregar 549
-    // Si no empieza con 54 y tiene 11 dígitos (con 9), agregar 54
-    if (cleanPhone.length < 10) {
-      setErrorMessage("Teléfono inválido - muy corto");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!cleanPhone.startsWith("54")) {
-      cleanPhone = `54${cleanPhone}`;
-    }
-
-    // Asegurar que tiene exactamente 13 dígitos
-    if (cleanPhone.length !== 13) {
-      setErrorMessage("Teléfono debe tener exactamente 13 dígitos con código de país (54)");
+    // Validar que sea un número argentino válido (10, 11 o 13 dígitos)
+    if (![10, 11, 13].includes(cleanPhone.length)) {
+      setErrorMessage("Teléfono inválido. Usa un número argentino válido.");
       setIsSubmitting(false);
       return;
     }
@@ -537,6 +524,50 @@ ID de cotización: ${quotation.id}`;
 
   return (
     <div className="space-y-6">
+      {/* Quotations List at top */}
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cotizaciones Pendientes ({quotations.filter(q => q.status === 'pending').length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8">Cargando...</div>
+            ) : quotations.filter(q => q.status === 'pending').length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No hay cotizaciones pendientes</p>
+            ) : (
+              <div className="space-y-4">
+                {quotations.filter(q => q.status === 'pending').map((quot) => (
+                  <div
+                    key={quot.id}
+                    className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h4 className="font-bold text-sm sm:text-base">{quot.name}</h4>
+                          <Badge className="text-xs">{quot.serviceType}</Badge>
+                        </div>
+                        <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} />
+                            <span>{quot.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign size={14} />
+                            <span>${(quot.totalPrice / 1000).toFixed(0)}k</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Card className="shadow-lg">
@@ -838,53 +869,6 @@ ID de cotización: ${quotation.id}`;
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* Quotations List */}
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Cotizaciones ({quotations.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Cargando...</div>
-            ) : quotations.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No hay cotizaciones aún</p>
-            ) : (
-              <div className="space-y-4">
-                {quotations.map((quot) => (
-                  <div
-                    key={quot.id}
-                    className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <h4 className="font-bold text-sm sm:text-base">{quot.name}</h4>
-                          <Badge className="text-xs">{quot.serviceType}</Badge>
-                          <Badge variant={quot.status === "pending" ? "secondary" : "default"} className="text-xs">
-                            {quot.status === "pending" ? "Pendiente" : "Aceptada"}
-                          </Badge>
-                        </div>
-                        <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Phone size={14} />
-                            <span>{quot.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign size={14} />
-                            <span>${(quot.totalPrice / 1000).toFixed(0)}k</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

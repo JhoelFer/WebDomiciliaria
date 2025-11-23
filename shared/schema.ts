@@ -3,23 +3,22 @@ import { pgTable, text, varchar, timestamp, integer } from "drizzle-orm/pg-core"
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Validador flexible para números argentinos
+// Validador universal para números argentinos
 const validateArgentinePhone = (phone: string) => {
   const cleanPhone = phone.replace(/\D/g, "");
   
   // Acepta formatos como:
   // 5493814468379 (con 54 código país)
-  // 93814468379 (sin 54)
-  // 381 4468379 (con espacios/guiones)
+  // 3814468379 (solo área + número)
+  // 93814468379 (con 9)
+  // 381 446 8379 (con espacios/guiones)
   // +54 9 381 446 8379
   
-  if (cleanPhone.startsWith("54")) {
-    // Si empieza con 54, debe tener 13 dígitos (54 + 9 + 10)
-    return cleanPhone.length === 13;
-  } else {
-    // Si no empieza con 54, debe tener 10 dígitos (9 + 10) o 11 dígitos (con 9)
-    return cleanPhone.length === 10 || cleanPhone.length === 11;
+  // Solo acepta números argentinos (10, 11 o 13 dígitos)
+  if (cleanPhone.length === 10 || cleanPhone.length === 11 || cleanPhone.length === 13) {
+    return true;
   }
+  return false;
 };
 
 export const appointments = pgTable("appointments", {
