@@ -3,10 +3,51 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home, Trash2 } from "lucide-react";
+import { CheckCircle2, X, LogOut, Eye, EyeOff, Clock, User, Phone, Home, Trash2, Code2, DollarSign } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import type { Appointment } from "@shared/schema";
+
+const BACKEND_URL = "https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev";
+const WHATSAPP_NUMBER = "5493814468379";
+
+const PRICING = {
+  landing: 200000,
+  corporate: 400000,
+  ecommerce: 750000,
+};
+
+interface QuotationFormData {
+  name: string;
+  phone: string;
+  email: string;
+  serviceType: "landing" | "corporate" | "ecommerce";
+  pages: number;
+  customDesign: "yes" | "no";
+  integrations: string;
+  urgency: "standard" | "urgent";
+  discount: number;
+}
+
+interface Quotation {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  serviceType: string;
+  pages: number;
+  customDesign: string;
+  integrations: string;
+  urgency: string;
+  discount: number;
+  totalPrice: number;
+  status: string;
+  createdAt: string;
+}
 
 export default function Admin() {
   const [password, setPassword] = useState("");
@@ -31,7 +72,7 @@ export default function Admin() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-2xl font-heading">Acceso Admin</CardTitle>
-            <CardDescription>Ingresa tu contraseña para ver las citas</CardDescription>
+            <CardDescription>Ingresa tu contraseña para acceder</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -88,8 +129,44 @@ export default function Admin() {
       </nav>
 
       <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
-        <AppointmentsList />
+        <AppointmentsAndQuotations queryClient={queryClient} />
       </div>
+    </div>
+  );
+}
+
+function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
+  const [activeTab, setActiveTab] = useState<"citas" | "cotizador">("citas");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-4 border-b">
+        <button
+          onClick={() => setActiveTab("citas")}
+          className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+            activeTab === "citas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          data-testid="tab-citas"
+        >
+          Solicitudes de Citas
+        </button>
+        <button
+          onClick={() => setActiveTab("cotizador")}
+          className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+            activeTab === "cotizador"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          data-testid="tab-cotizador"
+        >
+          Cotizador
+        </button>
+      </div>
+
+      {activeTab === "citas" && <AppointmentsList />}
+      {activeTab === "cotizador" && <QuotationManager queryClient={queryClient} />}
     </div>
   );
 }
@@ -99,14 +176,14 @@ function AppointmentsList() {
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments"],
     queryFn: async () => {
-      const res = await fetch("https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments");
+      const res = await fetch(`${BACKEND_URL}/api/appointments`);
       return res.json() as Promise<Appointment[]>;
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const res = await fetch(`https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/appointments/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -120,7 +197,7 @@ function AppointmentsList() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev/api/appointments/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/appointments/${id}`, {
         method: "DELETE",
       });
       return res.json();
@@ -174,15 +251,15 @@ function AppointmentsList() {
       </div>
 
       <div className="space-y-6">
-        <Section title="Solicitudes Pendientes" appointments={pending} updateMutation={updateMutation} deleteMutation={deleteMutation} />
-        <Section title="Citas Confirmadas" appointments={confirmed} updateMutation={updateMutation} deleteMutation={deleteMutation} />
-        <Section title="Citas Canceladas" appointments={cancelled} updateMutation={updateMutation} deleteMutation={deleteMutation} />
+        <AppointmentSection title="Solicitudes Pendientes" appointments={pending} updateMutation={updateMutation} deleteMutation={deleteMutation} />
+        <AppointmentSection title="Citas Confirmadas" appointments={confirmed} updateMutation={updateMutation} deleteMutation={deleteMutation} />
+        <AppointmentSection title="Citas Canceladas" appointments={cancelled} updateMutation={updateMutation} deleteMutation={deleteMutation} />
       </div>
     </div>
   );
 }
 
-function Section({
+function AppointmentSection({
   title,
   appointments,
   updateMutation,
@@ -288,5 +365,448 @@ function Section({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function QuotationManager({ queryClient }: { queryClient: any }) {
+  const [formData, setFormData] = useState<QuotationFormData>({
+    name: "",
+    phone: "",
+    email: "",
+    serviceType: "landing",
+    pages: 1,
+    customDesign: "no",
+    integrations: "none",
+    urgency: "standard",
+    discount: 0,
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [quotationId, setQuotationId] = useState<string | null>(null);
+
+  const { data: quotations = [], isLoading } = useQuery({
+    queryKey: ["quotations"],
+    queryFn: async () => {
+      const res = await fetch(`${BACKEND_URL}/api/quotations`);
+      return res.json() as Promise<Quotation[]>;
+    },
+  });
+
+  const calculatePrice = (): number => {
+    let price = PRICING[formData.serviceType];
+
+    if (formData.pages > 1) {
+      price += (formData.pages - 1) * 40000;
+    }
+
+    if (formData.customDesign === "yes") {
+      price += 80000;
+    }
+
+    if (formData.integrations !== "none") {
+      price += 60000;
+    }
+
+    if (formData.urgency === "urgent") {
+      price *= 1.2;
+    }
+
+    if (formData.discount > 0) {
+      price *= (1 - formData.discount / 100);
+    }
+
+    return Math.round(price);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    if (!formData.name.trim()) {
+      setErrorMessage("Por favor ingresa tu nombre");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const cleanPhone = formData.phone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      setErrorMessage("Teléfono inválido");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const totalPrice = calculatePrice();
+      const response = await fetch(`${BACKEND_URL}/api/quotations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          phone: cleanPhone.startsWith("54") ? cleanPhone : `54${cleanPhone}`,
+          totalPrice,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al crear cotización");
+      }
+
+      const quotation = await response.json();
+      setQuotationId(quotation.id);
+      queryClient.invalidateQueries({ queryKey: ["quotations"] });
+
+      const formattedPrice = (totalPrice / 1000).toFixed(0);
+      const whatsappText = `Hola Jhoel, solicité una cotización para mi proyecto de web. 
+
+*Detalles:*
+- Nombre: ${formData.name}
+- Tipo: ${formData.serviceType === "landing" ? "Landing Page" : formData.serviceType === "corporate" ? "Sitio Corporativo" : "E-commerce"}
+- Páginas: ${formData.pages}
+- Diseño personalizado: ${formData.customDesign === "yes" ? "Sí" : "No"}
+- Integraciones: ${formData.integrations !== "none" ? formData.integrations : "Ninguna"}
+- Urgencia: ${formData.urgency === "urgent" ? "Urgente" : "Normal"}
+- Descuento: ${formData.discount}%
+
+*Precio cotizado: $${formattedPrice}k ARS*
+
+ID de cotización: ${quotation.id}`;
+
+      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappText)}`;
+      window.open(whatsappUrl, "_blank");
+
+      setFormData({
+        name: "",
+        phone: "",
+        email: "",
+        serviceType: "landing",
+        pages: 1,
+        customDesign: "no",
+        integrations: "none",
+        urgency: "standard",
+        discount: 0,
+      });
+    } catch (error: any) {
+      setErrorMessage(error.message || "Error al procesar la cotización");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const totalPrice = calculatePrice();
+  const priceInARS = (totalPrice / 1000).toFixed(0);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Code2 size={20} />
+                Generador de Cotizaciones
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Nombre *</Label>
+                    <Input
+                      placeholder="Tu nombre"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      data-testid="input-name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Teléfono *</Label>
+                    <Input
+                      placeholder="+54 9 381 446 8379"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      data-testid="input-phone"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="font-semibold">Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    data-testid="input-email"
+                  />
+                </div>
+
+                <div>
+                  <Label className="font-semibold mb-3 block">Tipo de Sitio Web *</Label>
+                  <RadioGroup
+                    value={formData.serviceType}
+                    onValueChange={(value: any) =>
+                      setFormData({ ...formData, serviceType: value })
+                    }
+                  >
+                    {[
+                      { value: "landing", label: "Landing Page", price: PRICING.landing },
+                      { value: "corporate", label: "Sitio Corporativo", price: PRICING.corporate },
+                      { value: "ecommerce", label: "E-commerce", price: PRICING.ecommerce },
+                    ].map((option) => (
+                      <div
+                        key={option.value}
+                        className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50"
+                        data-testid={`radio-${option.value}`}
+                      >
+                        <RadioGroupItem value={option.value} id={option.value} />
+                        <label htmlFor={option.value} className="flex-1 cursor-pointer">
+                          <div className="font-medium">{option.label}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Desde ${(option.price / 1000).toFixed(0)}k
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label className="font-semibold">Cantidad de Páginas</Label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, pages: num })}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          formData.pages === num
+                            ? "bg-primary text-white"
+                            : "bg-slate-100 text-slate-900 hover:bg-slate-200"
+                        }`}
+                        data-testid={`button-pages-${num}`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="font-semibold mb-3 block">¿Diseño Personalizado? (+$80.000)</Label>
+                  <RadioGroup
+                    value={formData.customDesign}
+                    onValueChange={(value: any) =>
+                      setFormData({ ...formData, customDesign: value })
+                    }
+                  >
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="yes" id="custom-yes" />
+                      <label htmlFor="custom-yes" className="cursor-pointer">Sí</label>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="no" id="custom-no" />
+                      <label htmlFor="custom-no" className="cursor-pointer">No</label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label className="font-semibold mb-3 block">Integraciones</Label>
+                  <Select
+                    value={formData.integrations}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, integrations: value })
+                    }
+                  >
+                    <SelectTrigger data-testid="select-integrations">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Ninguna</SelectItem>
+                      <SelectItem value="mercadopago">Mercado Pago (+$60.000)</SelectItem>
+                      <SelectItem value="stripe">Stripe (+$60.000)</SelectItem>
+                      <SelectItem value="zapier">Zapier (+$60.000)</SelectItem>
+                      <SelectItem value="multiple">Múltiples (+$120.000)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="font-semibold mb-3 block">¿Urgente? (+20%)</Label>
+                  <RadioGroup
+                    value={formData.urgency}
+                    onValueChange={(value: any) =>
+                      setFormData({ ...formData, urgency: value })
+                    }
+                  >
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="standard" id="urgent-no" />
+                      <label htmlFor="urgent-no" className="cursor-pointer">Normal</label>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="urgent" id="urgent-yes" />
+                      <label htmlFor="urgent-yes" className="cursor-pointer">Urgente</label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label className="font-semibold">Descuento (%)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.discount}
+                    onChange={(e) =>
+                      setFormData({ ...formData, discount: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })
+                    }
+                    data-testid="input-discount"
+                  />
+                </div>
+
+                {errorMessage && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                    {errorMessage}
+                  </div>
+                )}
+
+                {quotationId && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700 font-medium">
+                      ✓ Cotización creada y enviada a WhatsApp
+                    </p>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full"
+                  disabled={isSubmitting}
+                  data-testid="button-submit-quotation"
+                >
+                  {isSubmitting ? "Generando..." : "Generar Cotización"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-1">
+          <Card className="shadow-lg sticky top-20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="text-primary" size={24} />
+                Resumen
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2 pb-4 border-b text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Base</span>
+                  <span className="font-medium">${(PRICING[formData.serviceType] / 1000).toFixed(0)}k</span>
+                </div>
+                {formData.pages > 1 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Páginas Adicionales</span>
+                    <span className="font-medium">+${((formData.pages - 1) * 40000 / 1000).toFixed(0)}k</span>
+                  </div>
+                )}
+                {formData.customDesign === "yes" && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Diseño Personalizado</span>
+                    <span className="font-medium">+$80k</span>
+                  </div>
+                )}
+                {formData.integrations !== "none" && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Integraciones</span>
+                    <span className="font-medium">+$60k</span>
+                  </div>
+                )}
+                {formData.urgency === "urgent" && (
+                  <div className="flex justify-between text-orange-600">
+                    <span>Urgencia</span>
+                    <span className="font-medium">+20%</span>
+                  </div>
+                )}
+              </div>
+
+              {formData.discount > 0 && (
+                <div className="flex justify-between text-sm text-green-600 font-medium">
+                  <span>Descuento</span>
+                  <span>-{formData.discount}%</span>
+                </div>
+              )}
+
+              <div className="pt-4 border-t-2 border-primary">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-muted-foreground">Total</span>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-primary">${priceInARS}k</div>
+                    <div className="text-xs text-muted-foreground">ARS</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Quotations List */}
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cotizaciones ({quotations.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8">Cargando...</div>
+            ) : quotations.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No hay cotizaciones aún</p>
+            ) : (
+              <div className="space-y-4">
+                {quotations.map((quot) => (
+                  <div
+                    key={quot.id}
+                    className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h4 className="font-bold text-sm sm:text-base">{quot.name}</h4>
+                          <Badge className="text-xs">{quot.serviceType}</Badge>
+                          <Badge variant={quot.status === "pending" ? "secondary" : "default"} className="text-xs">
+                            {quot.status === "pending" ? "Pendiente" : "Aceptada"}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} />
+                            <span>{quot.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign size={14} />
+                            <span>${(quot.totalPrice / 1000).toFixed(0)}k</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
