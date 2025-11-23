@@ -219,35 +219,38 @@ function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
       <div className="flex gap-4 border-b overflow-x-auto">
         <button
           onClick={() => setActiveTab("citas")}
-          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
+          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
             activeTab === "citas"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
           data-testid="tab-citas"
         >
+          <Calendar size={18} />
           Solicitudes de Citas
         </button>
         <button
           onClick={() => setActiveTab("cotizador")}
-          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
+          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
             activeTab === "cotizador"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
           data-testid="tab-cotizador"
         >
+          <Code2 size={18} />
           Cotizador
         </button>
         <button
           onClick={() => setActiveTab("aprobaciones")}
-          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
+          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
             activeTab === "aprobaciones"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
           data-testid="tab-aprobaciones"
         >
+          <CheckCircle2 size={18} />
           Aprobación de Cotizaciones
         </button>
       </div>
