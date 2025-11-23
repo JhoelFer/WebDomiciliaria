@@ -558,25 +558,6 @@ function QuotationManager({ queryClient }: { queryClient: any }) {
       setQuotationId(quotation.id);
       queryClient.invalidateQueries({ queryKey: ["quotations"] });
 
-      const formattedPrice = (totalPrice / 1000).toFixed(0);
-      const whatsappText = `Hola Jhoel, solicité una cotización para mi proyecto de web. 
-
-*Detalles:*
-- Nombre: ${formData.name}
-- Tipo: ${formData.serviceType === "landing" ? "Landing Page" : formData.serviceType === "corporate" ? "Sitio Corporativo" : "E-commerce"}
-- Páginas: ${formData.pages}
-- Diseño personalizado: ${formData.customDesign === "yes" ? "Sí" : "No"}
-- Integraciones: ${formData.integrations !== "none" ? formData.integrations : "Ninguna"}
-- Urgencia: ${formData.urgency === "urgent" ? "Urgente" : "Normal"}
-- Descuento: ${formData.discount}%
-
-*Precio cotizado: $${formattedPrice}k ARS*
-
-ID de cotización: ${quotation.id}`;
-
-      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappText)}`;
-      window.open(whatsappUrl, "_blank");
-
       setFormData({
         name: "",
         phone: "",
@@ -678,15 +659,14 @@ ID de cotización: ${quotation.id}`;
                 </div>
 
                 <div>
-                  <Label className="font-semibold">Email</Label>
+                  <Label className="font-semibold">Email (Contacto Secundario)</Label>
                   <Input
                     type="email"
-                    placeholder="tu@email.com"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    placeholder="jhoelalbornoz8989@gmail.com"
+                    disabled
+                    value="jhoelalbornoz8989@gmail.com"
                     data-testid="input-email"
+                    className="bg-gray-50 cursor-not-allowed"
                   />
                 </div>
 
@@ -823,7 +803,7 @@ ID de cotización: ${quotation.id}`;
                 {quotationId && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm text-green-700 font-medium">
-                      ✓ Cotización creada y enviada a WhatsApp
+                      ✓ Cotización guardada. Envía desde "Aprobación de Cotizaciones"
                     </p>
                   </div>
                 )}
@@ -998,6 +978,39 @@ function QuotationApprovalList({ queryClient }: { queryClient: any }) {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const formattedPrice = (quot.totalPrice / 1000).toFixed(0);
+                          const whatsappText = `Hola ${quot.name}, te envío tu cotización solicitada para tu proyecto web:
+
+*Detalles de tu Cotización:*
+- Tipo de sitio: ${quot.serviceType === "landing" ? "Landing Page" : quot.serviceType === "corporate" ? "Sitio Corporativo" : "E-commerce"}
+- Páginas: ${quot.pages}
+- Diseño personalizado: ${quot.customDesign === "yes" ? "Sí" : "No"}
+- Integraciones: ${quot.integrations !== "none" ? quot.integrations : "Ninguna"}
+- Urgencia: ${quot.urgency === "urgent" ? "Urgente" : "Normal"}
+
+💰 *Precio: $${formattedPrice}k ARS*
+
+Para confirmar o consultar más detalles, contáctame.
+
+ID de cotización: ${quot.id}`;
+                          
+                          // Formatear teléfono: si tiene 10, 11 o 13 dígitos, agregamos +54 al inicio
+                          let phone = quot.phone;
+                          if (phone.length === 10) phone = "54" + phone;
+                          else if (phone.length === 11) phone = "54" + phone.substring(1);
+                          else if (phone.length === 13 && phone.startsWith("54")) phone = phone;
+                          
+                          const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(whatsappText)}`;
+                          window.open(whatsappUrl, "_blank");
+                        }}
+                        className="gap-2 text-xs sm:text-sm bg-green-600 hover:bg-green-700"
+                        data-testid={`button-send-whatsapp-${quot.id}`}
+                      >
+                        Enviar por WhatsApp
+                      </Button>
                       <Button
                         size="sm"
                         onClick={() => approveMutation.mutate({ id: quot.id, status: "accepted" })}
