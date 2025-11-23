@@ -32,6 +32,9 @@ Preferred communication style: Simple, everyday language.
 - GET `/api/appointments/confirmed` - Get confirmed appointments only
 - GET `/api/appointments/booked-slots` - Check availability for specific dates
 - POST `/api/quotations` - Generate service quotations with dynamic pricing
+- GET `/api/quotations` - Retrieve all quotations (admin)
+- GET `/api/quotations/:id` - Get specific quotation details
+- PATCH `/api/quotations/:id` - Update quotation status
 - Additional CRUD operations for appointment and quotation management
 
 **CORS Configuration**: Open CORS policy (`origin: '*'`) to support cross-origin requests from Vercel-deployed frontend to Replit-hosted backend. This architectural decision separates static asset hosting (Vercel) from API logic (Replit).
@@ -45,6 +48,30 @@ Preferred communication style: Simple, everyday language.
 **Appointments Table**: Stores client appointment requests with fields for name, phone (validated for Argentine formats), date, time, message, status (pending/confirmed), and soft deletion support via `deletedAt` timestamp.
 
 **Quotations Table**: Tracks service quotation requests with pricing calculations based on service type (landing/corporate/ecommerce), number of pages, custom design requirements, integrations, urgency, and discounts. Stores final calculated price in Argentine pesos.
+
+## Pricing Strategy (Updated November 2025)
+
+**Base Pricing (Market-Based Argentine Rates):**
+- Landing Page: $200,000 ARS
+- Sitio Corporativo: $400,000 ARS
+- E-commerce Básico: $750,000 ARS
+
+**Additional Costs:**
+- Páginas adicionales: +$40,000 ARS c/u
+- Diseño personalizado: +$80,000 ARS
+- Integraciones (Mercado Pago, Stripe, Zapier, etc): +$60,000 ARS
+- Múltiples integraciones: +$120,000 ARS
+- Recargo por urgencia: +20% del total
+
+**Descuentos:**
+- Aplicables por porcentaje en el formulario
+- Sistema automático en cotizador
+
+**Pricing Rationale:**
+Basado en investigación de mercado argentino 2025. Los precios reflejan:
+- Costos operacionales (IA tools ~$15k/mes, transporte ~$120 ARS/km, salarios $6,500-12,500 ARS/hora)
+- Margen de ganancia del 30%
+- Competitividad con agencias locales ($150k-500k+ ARS para proyectos similares)
 
 **Design Pattern**: UUID primary keys generated via PostgreSQL's `gen_random_uuid()`, timestamps for audit trails, and soft deletes for data retention.
 

@@ -25,17 +25,18 @@ interface QuotationFormData {
   discount: number;
 }
 
+// Precios basados en mercado argentino 2025
 const PRICING = {
-  landing: 15000, // ARS base
-  corporate: 25000,
-  ecommerce: 40000,
+  landing: 200000, // Landing Page: $200k ARS (estándar en mercado)
+  corporate: 400000, // Sitio Corporativo: $400k ARS
+  ecommerce: 750000, // E-commerce Básico: $750k ARS
 };
 
 const COSTS = {
-  aiTools: 2000, // ChatGPT Plus, Midjourney monthly
-  transportPerKm: 50, // ARS per km
-  hourlyRate: 150, // USD equivalent
-  margin: 0.35, // 35% margin
+  aiTools: 15000, // ChatGPT Plus, Midjourney monthly (aprox)
+  transportPerKm: 120, // ARS per km (actualizado a inflación)
+  hourlyRate: 750, // ARS/hora (aprox $6,500-12,500)
+  margin: 0.30, // 30% margin
 };
 
 export default function Quoter() {
@@ -59,22 +60,22 @@ export default function Quoter() {
   const calculatePrice = (): number => {
     let price = PRICING[formData.serviceType];
 
-    // Add price for additional pages
+    // Add price for additional pages (+$40k c/u)
     if (formData.pages > 1) {
-      price += (formData.pages - 1) * 3000;
+      price += (formData.pages - 1) * 40000;
     }
 
-    // Add cost for custom design
+    // Add cost for custom design (+$80k)
     if (formData.customDesign === "yes") {
-      price += 5000;
+      price += 80000;
     }
 
-    // Add integration costs
+    // Add integration costs (+$60k)
     if (formData.integrations !== "none") {
-      price += 3000;
+      price += 60000;
     }
 
-    // Add urgency surcharge
+    // Add urgency surcharge (+20%)
     if (formData.urgency === "urgent") {
       price *= 1.2;
     }
@@ -127,7 +128,7 @@ export default function Quoter() {
       setQuotationId(quotation.id);
 
       // Send to WhatsApp
-      const formattedPrice = (totalPrice / 100).toFixed(2);
+      const formattedPrice = (totalPrice / 1000).toFixed(0);
       const whatsappText = `Hola Jhoel, solicité una cotización para mi proyecto de web. 
 
 *Detalles:*
@@ -166,7 +167,7 @@ ID de cotización: ${quotation.id}`;
   };
 
   const totalPrice = calculatePrice();
-  const priceInARS = (totalPrice / 100).toFixed(2);
+  const priceInARS = (totalPrice / 1000).toFixed(0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-6">
@@ -271,7 +272,7 @@ ID de cotización: ${quotation.id}`;
                           <label htmlFor={option.value} className="flex-1 cursor-pointer">
                             <div className="font-medium">{option.label}</div>
                             <div className="text-sm text-muted-foreground">
-                              Desde ${(option.price / 100).toFixed(0)}
+                              Desde ${(option.price / 1000).toFixed(0)}k
                             </div>
                           </label>
                         </div>
@@ -301,14 +302,14 @@ ID de cotización: ${quotation.id}`;
                     </div>
                     {formData.pages > 1 && (
                       <p className="text-sm text-muted-foreground mt-2">
-                        +${((formData.pages - 1) * 3000 / 100).toFixed(0)} por páginas adicionales
+                        +${((formData.pages - 1) * 40000 / 1000).toFixed(0)}k por páginas adicionales
                       </p>
                     )}
                   </div>
 
                   {/* Custom Design */}
                   <div>
-                    <Label className="font-semibold mb-3 block">¿Diseño Personalizado? (+$50)</Label>
+                    <Label className="font-semibold mb-3 block">¿Diseño Personalizado? (+$80.000)</Label>
                     <RadioGroup
                       value={formData.customDesign}
                       onValueChange={(value: any) =>
@@ -340,10 +341,10 @@ ID de cotización: ${quotation.id}`;
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Ninguna</SelectItem>
-                        <SelectItem value="mercadopago">Mercado Pago (+$30)</SelectItem>
-                        <SelectItem value="stripe">Stripe (+$30)</SelectItem>
-                        <SelectItem value="zapier">Zapier (+$30)</SelectItem>
-                        <SelectItem value="multiple">Múltiples (+$60)</SelectItem>
+                        <SelectItem value="mercadopago">Mercado Pago (+$60.000)</SelectItem>
+                        <SelectItem value="stripe">Stripe (+$60.000)</SelectItem>
+                        <SelectItem value="zapier">Zapier (+$60.000)</SelectItem>
+                        <SelectItem value="multiple">Múltiples (+$120.000)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -421,24 +422,24 @@ ID de cotización: ${quotation.id}`;
                 <div className="space-y-3 pb-4 border-b">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Servicio Base</span>
-                    <span className="font-medium">${(PRICING[formData.serviceType] / 100).toFixed(0)}</span>
+                    <span className="font-medium">${(PRICING[formData.serviceType] / 1000).toFixed(0)}k</span>
                   </div>
                   {formData.pages > 1 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Páginas Adicionales</span>
-                      <span className="font-medium">+${((formData.pages - 1) * 3000 / 100).toFixed(0)}</span>
+                      <span className="font-medium">+${((formData.pages - 1) * 40000 / 1000).toFixed(0)}k</span>
                     </div>
                   )}
                   {formData.customDesign === "yes" && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Diseño Personalizado</span>
-                      <span className="font-medium">+$50</span>
+                      <span className="font-medium">+$80k</span>
                     </div>
                   )}
                   {formData.integrations !== "none" && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Integraciones</span>
-                      <span className="font-medium">+$30</span>
+                      <span className="font-medium">+$60k</span>
                     </div>
                   )}
                   {formData.urgency === "urgent" && (
