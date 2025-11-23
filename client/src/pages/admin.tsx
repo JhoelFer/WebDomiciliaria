@@ -524,50 +524,6 @@ ID de cotización: ${quotation.id}`;
 
   return (
     <div className="space-y-6">
-      {/* Quotations List at top */}
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Cotizaciones Pendientes ({quotations.filter(q => q.status === 'pending').length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Cargando...</div>
-            ) : quotations.filter(q => q.status === 'pending').length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No hay cotizaciones pendientes</p>
-            ) : (
-              <div className="space-y-4">
-                {quotations.filter(q => q.status === 'pending').map((quot) => (
-                  <div
-                    key={quot.id}
-                    className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <h4 className="font-bold text-sm sm:text-base">{quot.name}</h4>
-                          <Badge className="text-xs">{quot.serviceType}</Badge>
-                        </div>
-                        <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Phone size={14} />
-                            <span>{quot.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign size={14} />
-                            <span>${(quot.totalPrice / 1000).toFixed(0)}k</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Card className="shadow-lg">

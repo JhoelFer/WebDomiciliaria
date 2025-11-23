@@ -8,13 +8,17 @@ const validateArgentinePhone = (phone: string) => {
   const cleanPhone = phone.replace(/\D/g, "");
   
   // Acepta formatos como:
+  // +549381446837 (con +54 9)
+  // +543814468379 (con +54 solo área)
   // 5493814468379 (con 54 código país)
   // 3814468379 (solo área + número)
   // 93814468379 (con 9)
   // 381 446 8379 (con espacios/guiones)
-  // +54 9 381 446 8379
   
   // Solo acepta números argentinos (10, 11 o 13 dígitos)
+  // 10 dígitos: 3814468379
+  // 11 dígitos: 93814468379
+  // 13 dígitos: 5493814468379
   if (cleanPhone.length === 10 || cleanPhone.length === 11 || cleanPhone.length === 13) {
     return true;
   }
