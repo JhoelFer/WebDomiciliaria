@@ -1,8 +1,7 @@
 // Fixed CORS API routes issue for Vercel deployment
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { 
   Monitor, 
   Smartphone, 
@@ -19,9 +18,7 @@ import {
   Zap,
   DollarSign,
   Users,
-  Headphones,
-  Clock,
-  TrendingUp
+  Headphones
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +34,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary/20">
       <Navbar />
-      <Dashboard />
       <Hero />
       <Services />
       <About />
@@ -80,115 +76,6 @@ function Navbar() {
         </div>
       </div>
     </nav>
-  );
-}
-
-const BACKEND_URL = "https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev";
-
-interface Quotation {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  serviceType: string;
-  pages: number;
-  customDesign: string;
-  integrations: string;
-  urgency: string;
-  discount: number;
-  totalPrice: number;
-  status: string;
-  createdAt: string;
-}
-
-function Dashboard() {
-  const { data: quotations = [], isLoading } = useQuery({
-    queryKey: ["quotations"],
-    queryFn: async () => {
-      const res = await fetch(`${BACKEND_URL}/api/quotations`);
-      return res.json() as Promise<Quotation[]>;
-    },
-  });
-
-  const pendingCount = quotations.filter(q => q.status === "pending").length;
-  const acceptedCount = quotations.filter(q => q.status === "accepted").length;
-  const totalValue = quotations.reduce((sum, q) => sum + (q.totalPrice || 0), 0);
-
-  return (
-    <section className="pt-24 pb-8 lg:pt-32 lg:pb-12 bg-gradient-to-b from-accent/20 to-background">
-      <div className="container mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-5xl mx-auto"
-        >
-          <div className="mb-6">
-            <h2 className="text-2xl lg:text-3xl font-heading font-bold mb-2">Estado de Cotizaciones</h2>
-            <p className="text-muted-foreground">Seguimiento en tiempo real del pipeline de proyectos</p>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="pt-6">
-                    <div className="h-8 bg-slate-200 rounded w-20 mb-2" />
-                    <div className="h-4 bg-slate-100 rounded w-32" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className="border-l-4 border-l-yellow-500">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Pendientes</p>
-                      <p className="text-3xl font-bold">{pendingCount}</p>
-                    </div>
-                    <Clock className="text-yellow-500 opacity-50" size={32} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-green-500">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Aprobadas</p>
-                      <p className="text-3xl font-bold text-green-600">{acceptedCount}</p>
-                    </div>
-                    <CheckCircle2 className="text-green-500 opacity-50" size={32} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Valor Total</p>
-                      <p className="text-3xl font-bold text-primary">${(totalValue / 1000000).toFixed(1)}M</p>
-                    </div>
-                    <TrendingUp className="text-primary opacity-50" size={32} />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {!isLoading && quotations.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs sm:text-sm text-blue-700">
-                <strong>💡 Tip:</strong> Ve a <a href="/admin" className="font-semibold hover:underline">Admin</a> para gestionar cotizaciones y aprobar solicitudes.
-              </p>
-            </div>
-          )}
-        </motion.div>
-      </div>
-    </section>
   );
 }
 
