@@ -49,6 +49,20 @@ Preferred communication style: Simple, everyday language.
 
 **Quotations Table**: Tracks service quotation requests with pricing calculations based on service type (landing/corporate/ecommerce), number of pages, custom design requirements, integrations, urgency, and discounts. Stores final calculated price in Argentine pesos.
 
+## Admin Panel Features
+
+**Tabs Available:**
+1. **Solicitudes de Citas** - Gestión completa de solicitudes de citas con estados (Pendiente, Confirmada, Cancelada)
+2. **Cotizador** - Generador de cotizaciones con búsqueda de clientes desde citas confirmadas, cálculo automático de precios, envío a WhatsApp
+3. **Aprobación de Cotizaciones** - Panel de aprobación de cotizaciones pendientes, separadas en dos secciones (pendientes y aprobadas)
+
+**Flujo de Trabajo:**
+1. Cliente solicita cita → Admin confirma → Aparece en lista de citas confirmadas
+2. Admin accede al cotizador → Busca cliente por nombre/teléfono de citas confirmadas
+3. Genera cotización → Se guarda como "pendiente" en la base de datos
+4. Accede a "Aprobación de Cotizaciones" → Aprueba o rechaza la cotización
+5. Cotización aprobada → "Listo para Trabajar" (sección verde)
+
 ## Pricing Strategy (Updated November 2025)
 
 **Base Pricing (Market-Based Argentine Rates):**

@@ -136,14 +136,14 @@ export default function Admin() {
 }
 
 function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
-  const [activeTab, setActiveTab] = useState<"citas" | "cotizador">("citas");
+  const [activeTab, setActiveTab] = useState<"citas" | "cotizador" | "aprobaciones">("citas");
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 border-b">
+      <div className="flex gap-4 border-b overflow-x-auto">
         <button
           onClick={() => setActiveTab("citas")}
-          className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
             activeTab === "citas"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -154,7 +154,7 @@ function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
         </button>
         <button
           onClick={() => setActiveTab("cotizador")}
-          className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
             activeTab === "cotizador"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -163,10 +163,22 @@ function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
         >
           Cotizador
         </button>
+        <button
+          onClick={() => setActiveTab("aprobaciones")}
+          className={`px-4 py-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
+            activeTab === "aprobaciones"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          data-testid="tab-aprobaciones"
+        >
+          Aprobación de Cotizaciones
+        </button>
       </div>
 
       {activeTab === "citas" && <AppointmentsList />}
       {activeTab === "cotizador" && <QuotationManager queryClient={queryClient} />}
+      {activeTab === "aprobaciones" && <QuotationApprovalList queryClient={queryClient} />}
     </div>
   );
 }
@@ -384,6 +396,17 @@ function QuotationManager({ queryClient }: { queryClient: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [quotationId, setQuotationId] = useState<string | null>(null);
+  const [showClientSearch, setShowClientSearch] = useState(false);
+
+  // Fetch confirmed appointments for client search
+  const { data: confirmedAppointments = [] } = useQuery({
+    queryKey: ["appointmentsConfirmed"],
+    queryFn: async () => {
+      const res = await fetch(`${BACKEND_URL}/api/appointments`);
+      const all = await res.json() as Appointment[];
+      return all.filter((a) => a.status === "confirmed");
+    },
+  });
 
   const { data: quotations = [], isLoading } = useQuery({
     queryKey: ["quotations"],
@@ -510,6 +533,47 @@ ID de cotización: ${quotation.id}`;
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <Label className="font-semibold mb-3 block">Buscar Cliente (Citas Confirmadas)</Label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowClientSearch(!showClientSearch)}
+                      className="w-full px-4 py-2 border rounded-lg text-left hover:bg-slate-50 transition-colors"
+                      data-testid="button-search-clients"
+                    >
+                      {formData.name || "Seleccionar cliente..."}
+                    </button>
+                    {showClientSearch && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                        {confirmedAppointments.length === 0 ? (
+                          <div className="p-4 text-muted-foreground text-sm">No hay citas confirmadas</div>
+                        ) : (
+                          confirmedAppointments.map((apt) => (
+                            <button
+                              key={apt.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  name: apt.name,
+                                  phone: apt.phone,
+                                });
+                                setShowClientSearch(false);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-slate-50 border-b last:border-b-0 transition-colors"
+                              data-testid={`option-client-${apt.id}`}
+                            >
+                              <div className="font-medium text-sm">{apt.name}</div>
+                              <div className="text-xs text-muted-foreground">{apt.phone}</div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="font-semibold">Nombre *</Label>
@@ -806,6 +870,177 @@ ID de cotización: ${quotation.id}`;
             )}
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+function QuotationApprovalList({ queryClient }: { queryClient: any }) {
+  const { data: quotations = [], isLoading } = useQuery({
+    queryKey: ["quotations"],
+    queryFn: async () => {
+      const res = await fetch(`${BACKEND_URL}/api/quotations`);
+      return res.json() as Promise<Quotation[]>;
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const res = await fetch(`${BACKEND_URL}/api/quotations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotations"] });
+    },
+  });
+
+  if (isLoading) {
+    return <div className="text-center py-8">Cargando...</div>;
+  }
+
+  const pendingQuotations = quotations.filter((q) => q.status === "pending");
+  const acceptedQuotations = quotations.filter((q) => q.status === "accepted");
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+        <Card className="h-24 sm:h-auto">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Cotizaciones Pendientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl sm:text-3xl font-bold text-primary">{pendingQuotations.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="h-24 sm:h-auto">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Cotizaciones Aprobadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl sm:text-3xl font-bold text-green-600">{acceptedQuotations.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        {pendingQuotations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Solicitudes Pendientes de Aprobación</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pendingQuotations.map((quot) => (
+                  <div
+                    key={quot.id}
+                    className="border border-border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h4 className="font-bold text-sm sm:text-base">{quot.name}</h4>
+                          <Badge className="text-xs">{quot.serviceType === "landing" ? "Landing" : quot.serviceType === "corporate" ? "Corporativo" : "E-commerce"}</Badge>
+                          <Badge variant="secondary" className="text-xs">Pendiente</Badge>
+                        </div>
+                        <div className="space-y-2 text-xs sm:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} />
+                            <span>{quot.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign size={14} />
+                            <span className="font-semibold text-primary">${(quot.totalPrice / 1000).toFixed(0)}k</span>
+                          </div>
+                          <div className="text-xs">
+                            <span className="font-medium">Detalles:</span> {quot.pages} página{quot.pages > 1 ? "s" : ""}, {quot.customDesign === "yes" ? "Diseño personalizado" : "Diseño estándar"}, {quot.integrations !== "none" ? quot.integrations : "sin integraciones"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border">
+                      <Button
+                        size="sm"
+                        onClick={() => approveMutation.mutate({ id: quot.id, status: "accepted" })}
+                        disabled={approveMutation.isPending}
+                        className="gap-2 text-xs sm:text-sm"
+                        data-testid={`button-approve-quotation-${quot.id}`}
+                      >
+                        <CheckCircle2 size={16} />
+                        Aprobar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => approveMutation.mutate({ id: quot.id, status: "rejected" })}
+                        disabled={approveMutation.isPending}
+                        className="gap-2 text-xs sm:text-sm"
+                        data-testid={`button-reject-quotation-${quot.id}`}
+                      >
+                        <X size={16} />
+                        Rechazar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {acceptedQuotations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Cotizaciones Aprobadas - Listo para Trabajar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {acceptedQuotations.map((quot) => (
+                  <div
+                    key={quot.id}
+                    className="border border-green-200 bg-green-50 rounded-lg p-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h4 className="font-bold text-sm sm:text-base">{quot.name}</h4>
+                          <Badge className="text-xs bg-green-600">{quot.serviceType === "landing" ? "Landing" : quot.serviceType === "corporate" ? "Corporativo" : "E-commerce"}</Badge>
+                          <Badge className="text-xs bg-green-600">Aprobada</Badge>
+                        </div>
+                        <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} />
+                            <span>{quot.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign size={14} />
+                            <span className="font-semibold text-green-700">${(quot.totalPrice / 1000).toFixed(0)}k</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {pendingQuotations.length === 0 && acceptedQuotations.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">No hay cotizaciones aún</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
