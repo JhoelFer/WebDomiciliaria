@@ -6,6 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Admin from "@/pages/admin";
+import { useState, useEffect } from "react";
+import { ServerOffline } from "@/components/ServerOffline";
+
+const BACKEND_URL = "https://ab09c429-fccd-49d5-8cac-5b4ea9caf0e9-00-3jgf16yawkg1l.riker.replit.dev";
 
 function Router() {
   return (
@@ -18,6 +22,32 @@ function Router() {
 }
 
 function App() {
+  const [serverAvailable, setServerAvailable] = useState(true);
+
+  useEffect(() => {
+    const checkServer = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/appointments`, {
+          method: "GET",
+        });
+        setServerAvailable(response.ok);
+      } catch {
+        setServerAvailable(false);
+      }
+    };
+
+    // Check on mount
+    checkServer();
+
+    // Check every 10 seconds
+    const interval = setInterval(checkServer, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!serverAvailable) {
+    return <ServerOffline />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
