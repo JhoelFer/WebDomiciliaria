@@ -138,21 +138,25 @@ export default function Admin() {
 function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
   const [activeTab, setActiveTab] = useState<"citas" | "cotizador" | "aprobaciones">("citas");
   
-  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery({
+  const { data: appointmentsRaw = [], isLoading: appointmentsLoading } = useQuery({
     queryKey: ["appointments"],
     queryFn: async () => {
       const res = await fetch(`${BACKEND_URL}/api/appointments`);
-      return res.json() as Promise<Appointment[]>;
+      return res.json();
     },
   });
 
-  const { data: quotations = [], isLoading: quotationsLoading } = useQuery({
+  const appointments = Array.isArray(appointmentsRaw) ? appointmentsRaw : [];
+
+  const { data: quotationsRaw = [], isLoading: quotationsLoading } = useQuery({
     queryKey: ["quotations"],
     queryFn: async () => {
       const res = await fetch(`${BACKEND_URL}/api/quotations`);
-      return res.json() as Promise<Quotation[]>;
+      return res.json();
     },
   });
+
+  const quotations = Array.isArray(quotationsRaw) ? quotationsRaw : [];
 
   const appointmentsPending = appointments.filter(a => a.status === "pending").length;
   const appointmentsConfirmed = appointments.filter(a => a.status === "confirmed").length;
