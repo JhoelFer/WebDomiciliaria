@@ -30,10 +30,10 @@ function App() {
         const response = await fetch(`${BACKEND_URL}/api/appointments`, {
           method: "GET",
         });
-        // Si el servidor responde con 200 o 500 (pero responde), lo consideramos "disponible" 
-        // para que React Query maneje los errores específicos de datos.
+        // Consider server available regardless of status code as long as it responds
         setServerAvailable(true);
       } catch {
+        // Only set offline if there's a network error (CORS, connection refused, etc)
         setServerAvailable(false);
       }
     };
