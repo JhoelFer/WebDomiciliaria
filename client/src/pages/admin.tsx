@@ -268,13 +268,15 @@ function AppointmentsAndQuotations({ queryClient }: { queryClient: any }) {
 
 function AppointmentsList() {
   const queryClient = useQueryClient();
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointmentsRaw = [], isLoading } = useQuery({
     queryKey: ["appointments"],
     queryFn: async () => {
       const res = await fetch(`${BACKEND_URL}/api/appointments`);
-      return res.json() as Promise<Appointment[]>;
+      return res.json();
     },
   });
+
+  const appointments = Array.isArray(appointmentsRaw) ? appointmentsRaw : [];
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
