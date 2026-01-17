@@ -30,7 +30,9 @@ function App() {
         const response = await fetch(`${BACKEND_URL}/api/appointments`, {
           method: "GET",
         });
-        setServerAvailable(response.ok);
+        // Si el servidor responde con 200 o 500 (pero responde), lo consideramos "disponible" 
+        // para que React Query maneje los errores específicos de datos.
+        setServerAvailable(true);
       } catch {
         setServerAvailable(false);
       }
